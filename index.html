@@ -398,10 +398,45 @@ const FLOUR_FACTORS = {
     }
 
     window.updateBlendFlour = (idx, flourId) => { activeBlend[idx].flourId = flourId; saveAndCalc(); };
-    window.updateBlendPct = (idx, pct) => { activeBlend[idx].pct = parseFloat(pct) || 0; saveAndCalc(); };
+    window.updateBlendPct = (idx, pct) => {
+
+    pct = parseFloat(pct) || 0;
+
+    pct = Math.max(0, Math.min(100, pct));
+
+    activeBlend[idx].pct = pct;
+
+    if (activeBlend.length === 2) {
+
+        const otherIdx = idx === 0 ? 1 : 0;
+
+        activeBlend[otherIdx].pct = 100 - pct;
+    }
+
+    saveAndCalc();
+};
     window.removeBlendRow = (idx) => { activeBlend.splice(idx, 1); saveAndCalc(); };
 
     addBlendRowBtn.onclick = () => {
+
+    if (activeBlend.length >= 2) {
+        alert(
+            "La modalità Blend automatico supporta massimo 2 farine."
+        );
+        return;
+    }
+
+    const all = getAllFlours();
+
+    activeBlend.push({
+        flourId: all[0].id,
+        pct: 50
+    });
+
+    activeBlend[0].pct = 50;
+
+    saveAndCalc();
+};
       const all = getAllFlours();
       activeBlend.push({ flourId: all[0].id, pct: 10 });
       saveAndCalc();
@@ -642,14 +677,55 @@ const suggestedHydration =
         `;
         processTip.textContent = hF > 0 ? `Punta 1-2h a TA (${tR}°C), frigo ${hF}h a ${tF}°C, staglio e appretto finale a TA.` : `Lievitazione interamente a TA (${tR}°C).`;
       } else {
+	  const prefPct =
+    parseFloat(prefermentPct.value) || 50;
+
+const prefFlour =
+    flourTot * (prefPct / 100);
+
+const finalFlour =
+    flourTot - prefFlour;
+
+let prefWater = 0;
+
+if (prefermentType.value === 'biga') {
+
+    prefWater = prefFlour * 0.50;
+
+} else {
+
+    prefWater = prefFlour * 1.00;
+
+}
+
+const finalWater =
+    waterTot - prefWater;
         recipeOutputContainer.innerHTML = `
           <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2">
             <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Prefermento (Fase 1)</h3>
-            <ul class="space-y-0.5">${blendIngredientsHTML}</ul>
+            <div class="flex justify-between text-xs">
+  <span>🌾 Farina</span>
+  <strong class="text-amber-300">
+    ${prefFlour.toFixed(1)} g
+  </strong>
+</div>
+
+<div class="flex justify-between text-xs">
+  <span>💧 Acqua</span>
+  <strong class="text-amber-300">
+    ${prefWater.toFixed(1)} g
+  </strong>
+</div>
           </div>
           <div class="bg-slate-900/80 border border-slate-700/50 rounded-xl p-4 space-y-2">
             <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Rinfresco (Fase 2)</h3>
-            <div class="flex justify-between text-xs"><span>💧 Acqua:</span><strong class="text-emerald-400">${waterTot.toFixed(1)}g</strong></div>
+			<div class="flex justify-between text-xs">
+  <span>🌾 Farina:</span>
+  <strong class="text-emerald-400">
+      ${finalFlour.toFixed(1)}g
+  </strong>
+</div>
+            <div class="flex justify-between text-xs"><span>💧 Acqua:</span><strong class="text-emerald-400">${finalWater.toFixed(1)}g</strong></div>
             <div class="flex justify-between text-xs"><span>🧂 Sale:</span><strong class="text-emerald-400">${saltTot.toFixed(1)}g</strong></div>
             <div class="flex justify-between text-xs"><span>🧫 Lievito:</span><strong class="text-emerald-400">${yeastTot.toFixed(2)}g</strong></div>
           </div>
