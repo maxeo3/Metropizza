@@ -419,43 +419,57 @@
     }
 
     function calculate() {
-      const b = +document.getElementById('numBalls').value;
-      const w = +document.getElementById('ballWeight').value;
-      const hBase = +document.getElementById('hydration').value / 100;
-      const totW = b * w;
-      
-      let wSum = 0, typeSum = 0;
-      blend.forEach(item => {
-        const f = flours.find(x => x.id === item.id);
-        wSum += f.w * (item.pct/100);
-        typeSum += f.type * (item.pct/100); // 0=Ref, 1=T1, 2=Int
-      });
+    // --- 1. PRESA DATI INPUT ---
+    const balls = parseFloat(numBalls.value) || 0;
+    const bWeight = parseFloat(ballWeight.value) || 0;
+    const hBase = parseFloat(hydration.value) / 100;
+    const slt = parseFloat(salt.value) || 0;
+    const ol = parseFloat(oil.value) || 0;
+    const hR = parseFloat(hoursRoom.value) || 0;
+    const tR = parseFloat(tempRoom.value) || 0;
+    const hF = parseFloat(hoursFridge.value) || 0;
+    const tF = parseFloat(tempFridge.value) || 0;
+    const yType = yeastType.value;
 
-      const extraH = typeSum * 0.05; 
-      const hFinal = hBase + extraH;
+    // --- 2. LOGICA INTEGRALE (NUOVA) ---
+    let wSum = 0, typeSum = 0;
+    activeBlend.forEach(b => {
+        const f = [...defaultFlours, ...customFlours].find(fl => fl.id === b.flourId) || defaultFlours[0];
+        wSum += (f.wNum || 260) * (b.pct / 100);
+        typeSum += (f.type || 0) * (b.pct / 100); 
+    });
+    const extraH = typeSum * 0.05; 
+    const finalHydration = hBase + extraH;
+    
+    // Mostra/Nascondi avviso idratazione (se esiste l'elemento nel tuo HTML)
+    const advice = document.getElementById('hydrationAdvice');
+    if (advice) {
+        advice.innerText = extraH > 0 ? `Blend grezzo: Idratazione corretta a ${(finalHydration * 100).toFixed(0)}%` : "";
+        advice.style.display = extraH > 0 ? "block" : "none";
+    }
 
-      document.getElementById('totalWeightDisplay').innerText = totW + 'g';
-      document.getElementById('wBlend').innerText = 'W ' + Math.round(wSum);
-      
-      const advice = document.getElementById('hydrationAdvice');
-      advice.innerHTML = extraH > 0 ? `Blend grezzo: Idratazione al ${(hFinal*100).toFixed(0)}%.` : "";
-      advice.style.display = extraH > 0 ? "block" : "none";
+    // --- 3. CALCOLI ---
+    const yInfo = calculateYeast(hR, tR, hF, tF, yType);
+    const totalWeight = balls * bWeight;
+    const mult = 1 + (finalHydration + (slt/100) + (ol/100) + (yInfo.pct/100)); 
+    const flourTot = totalWeight / mult;
+    const waterTot = flourTot * finalHydration;
+    const saltTot = flourTot * (slt / 100);
+    const oilTot = flourTot * (ol / 100);
+    const yeastTot = flourTot * (yInfo.pct / 100);
 
-      const flour = totW / (1 + hFinal);
-      const water = flour * hFinal;
-      const salt = flour * (+document.getElementById('salt').value / 100);
-      const yeast = flour * 0.002;
+    // --- 4. RENDER (Mantiene le tue icone originali) ---
+    totalWeightDisplay.textContent = Math.round(totalWeight) + ' g';
+    totalHoursDisplay.textContent = (hR + hF) + ' h';
 
-      document.getElementById('recipeOutputContainer').innerHTML = `
-        <ul class="text-sm space-y-2">
-          <li>Farina: ${Math.round(flour)}g</li>
-          <li>Acqua: ${Math.round(water)}g</li>
-          <li>Sale: ${Math.round(salt)}g</li>
-          <li class="pt-2 text-xs text-slate-400">Scomposizione Blend:</li>
-          ${blend.map(item => `<li>${item.pct}% ${flours.find(x=>x.id==item.id).name}: ${Math.round(flour*(item.pct/100))}g</li>`).join('')}
-        </ul>
-      `;
-    } g</span></li>
+    if (method === 'direct') {
+        renderDirectRecipe(flourTot, waterTot, saltTot, yeastTot, oilTot, yInfo.label, "Tuo Blend");
+    } else {
+        renderIndirectRecipe(flourTot, waterTot, saltTot, yeastTot, oilTot, prefermentType.value, parseFloat(prefermentPct.value), yInfo.label, "Tuo Blend");
+    }
+
+    currentCalculation = { /* ... metti qui il tuo oggetto originale ... */ };
+} g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🫒 Olio</span><span class="text-amber-400 font-bold">${oilTot.toFixed(1)} g</span></li>
             </ul>
           </div>
