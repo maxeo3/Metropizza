@@ -809,6 +809,34 @@ function renderHistory() {
     renderBlendRows();
     calculate();
     renderHistory();
-  </script>
+function renderHistory() {
+    const grid = document.getElementById('historyGrid');
+    const saved = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
+    
+    if (saved.length === 0) {
+        grid.innerHTML = `<p class="text-slate-500 text-xs">Nessuna ricetta archiviata.</p>`;
+        return;
+    }
+
+    grid.innerHTML = saved.map(rec => `
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+          <div class="flex justify-between font-bold text-xs">
+            <span>${rec.date}</span>
+            <button onclick="deleteRecipe('${rec.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+          </div>
+          <p class="text-[10px] text-amber-400">Blend: ${rec.data.blendDesc}</p>
+          <div class="flex gap-1 text-amber-500 text-sm">
+            ${[1,2,3,4,5].map(s => `<i class="fa-${s<=rec.rating?'solid':'regular'} fa-star cursor-pointer" onclick="rateRecipe('${rec.id}', ${s})"></i>`).join('')}
+          </div>
+          <textarea onchange="updateComment('${rec.id}', this.value)" class="w-full bg-slate-950 p-2 rounded text-white text-[10px]">${rec.comment || ''}</textarea>
+        </div>
+    `).join('');
+}
+
+// Forza il rendering al caricamento della pagina
+window.onload = function() {
+    renderHistory();
+};
+</script>  
 </body>
 </html>
