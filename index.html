@@ -755,7 +755,9 @@ const finalWater =
 
     alert("CLICK RICEVUTO");
 
-    console.log(currentCalculation);
+    console.log("currentCalculation =", currentCalculation);
+
+    alert(JSON.stringify(currentCalculation));
 
     if (!currentCalculation){
 
@@ -766,11 +768,7 @@ const finalWater =
 
     savedRecipes.unshift({
         id: 'rec_' + Date.now(),
-        date: new Date().toLocaleDateString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }),
+        date: new Date().toLocaleDateString('it-IT'),
         data: { ...currentCalculation },
         rating: 0,
         comment: ''
