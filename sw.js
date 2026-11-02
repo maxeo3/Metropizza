@@ -1,6 +1,6 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('doughmetry-v1').then((cache) => cache.addAll([
+    caches.open('metropizza-v1').then((cache) => cache.addAll([
       './',
       './index.html',
       './manifest.json',
