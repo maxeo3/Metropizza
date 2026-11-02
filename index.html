@@ -419,103 +419,43 @@
     }
 
     function calculate() {
-      const balls = parseFloat(numBalls.value) || 0;
-      const bWeight = parseFloat(ballWeight.value) || 0;
-      const hyd = parseFloat(hydration.value) || 0;
-      const slt = parseFloat(salt.value) || 0;
-      const ol = parseFloat(oil.value) || 0;
-
-      const hR = parseFloat(hoursRoom.value) || 0;
-      const tR = parseFloat(tempRoom.value) || 0;
-      const hF = parseFloat(hoursFridge.value) || 0;
-      const tF = parseFloat(tempFridge.value) || 0;
-      const yType = yeastType.value;
-
-      hydrationVal.textContent = hyd + '%';
-      saltVal.textContent = slt + '%';
-      oilVal.textContent = ol + '%';
-
-      // Calcolo Blend Farine (Media Ponderata W e Proteine)
-      const allFlours = [...defaultFlours, ...customFlours];
-      let totalPct = activeBlend.reduce((sum, b) => sum + b.pct, 0);
-      if (totalPct <= 0) totalPct = 100;
-
-      let weightedW = 0;
-      let blendDescription = [];
-
-      activeBlend.forEach(b => {
-        const flourObj = allFlours.find(f => f.id === b.flourId) || allFlours[0];
-        const fW = flourObj.wNum || parseInt(flourObj.w.replace(/\D/g,'')) || 260;
-        const weightRatio = b.pct / totalPct;
-        weightedW += fW * weightRatio;
-        blendDescription.push(`${b.pct}% ${flourObj.name} (${flourObj.w})`);
+      const b = +document.getElementById('numBalls').value;
+      const w = +document.getElementById('ballWeight').value;
+      const hBase = +document.getElementById('hydration').value / 100;
+      const totW = b * w;
+      
+      let wSum = 0, typeSum = 0;
+      blend.forEach(item => {
+        const f = flours.find(x => x.id === item.id);
+        wSum += f.w * (item.pct/100);
+        typeSum += f.type * (item.pct/100); // 0=Ref, 1=T1, 2=Int
       });
 
-      const finalBlendW = Math.round(weightedW);
+      const extraH = typeSum * 0.05; 
+      const hFinal = hBase + extraH;
 
-      const yInfo = calculateYeast(hR, tR, hF, tF, yType);
-      const yPct = yInfo.pct;
+      document.getElementById('totalWeightDisplay').innerText = totW + 'g';
+      document.getElementById('wBlend').innerText = 'W ' + Math.round(wSum);
+      
+      const advice = document.getElementById('hydrationAdvice');
+      advice.innerHTML = extraH > 0 ? `Blend grezzo: Idratazione al ${(hFinal*100).toFixed(0)}%.` : "";
+      advice.style.display = extraH > 0 ? "block" : "none";
 
-      const totW = balls * bWeight;
-      totalWeightDisplay.textContent = Math.round(totW) + ' g';
-      totalHoursDisplay.textContent = (hR + hF) + ' h';
+      const flour = totW / (1 + hFinal);
+      const water = flour * hFinal;
+      const salt = flour * (+document.getElementById('salt').value / 100);
+      const yeast = flour * 0.002;
 
-      const mult = 1 + ((hyd + slt + ol + yPct) / 100);
-      const flourTot = totW / mult;
-      const waterTot = flourTot * (hyd / 100);
-      const saltTot = flourTot * (slt / 100);
-      const oilTot = flourTot * (ol / 100);
-      const yeastTot = flourTot * (yPct / 100);
-
-      // W-Match Checker
-      let recWMin = 180, recWMax = 240;
-      if (yInfo.eqHours > 6 && yInfo.eqHours <= 16) { recWMin = 220; recWMax = 280; }
-      else if (yInfo.eqHours > 16 && yInfo.eqHours <= 32) { recWMin = 280; recWMax = 330; }
-      else if (yInfo.eqHours > 32) { recWMin = 330; recWMax = 400; }
-
-      flourWContainer.innerHTML = `
-        <div class="flex justify-between items-center bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/20">
-          <div><span class="text-slate-400 text-[10px]">Blend Totale:</span> <span class="font-bold text-cyan-300">W ${finalBlendW} medio</span></div>
-          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">Ideale: W ${recWMin} - ${recWMax}</span>
-        </div>
+      document.getElementById('recipeOutputContainer').innerHTML = `
+        <ul class="text-sm space-y-2">
+          <li>Farina: ${Math.round(flour)}g</li>
+          <li>Acqua: ${Math.round(water)}g</li>
+          <li>Sale: ${Math.round(salt)}g</li>
+          <li class="pt-2 text-xs text-slate-400">Scomposizione Blend:</li>
+          ${blend.map(item => `<li>${item.pct}% ${flours.find(x=>x.id==item.id).name}: ${Math.round(flour*(item.pct/100))}g</li>`).join('')}
+        </ul>
       `;
-
-      if (finalBlendW < recWMin - 30) {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-red-500/15 border-red-500/40 text-red-300";
-        alertIcon.className = "fa-solid fa-triangle-exclamation text-red-400 text-lg mt-0.5";
-        alertTitle.textContent = "⚠️ Blend Troppo Debole!";
-        alertMessage.textContent = `La forza media del blend (W ${finalBlendW}) è troppo bassa per ${Math.round(yInfo.eqHours)}h equivalenti.`;
-      } else if (finalBlendW > recWMax + 50) {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-amber-500/15 border-amber-500/40 text-amber-300";
-        alertIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5";
-        alertTitle.textContent = "⚠️ Blend Troppo Forte!";
-        alertMessage.textContent = `La forza media del blend (W ${finalBlendW}) è troppo alta per questo tempo breve.`;
-      } else {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-emerald-500/15 border-emerald-500/40 text-emerald-300";
-        alertIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg mt-0.5";
-        alertTitle.textContent = "✅ W Blend Bilanciato";
-        alertMessage.textContent = "La forza combinata delle farine rispecchia perfettamente la maturazione.";
-      }
-
-      // Render scomposizione grammi per ciascuna farina del blend
-      let blendIngredientsHTML = activeBlend.map(b => {
-        const flourObj = allFlours.find(f => f.id === b.flourId) || allFlours[0];
-        const gramsForThisFlour = flourTot * ((b.pct / totalPct));
-        return `<li class="flex justify-between text-xs text-slate-300 pl-2"><span>- ${b.pct}% ${flourObj.name}:</span> <strong class="text-amber-300">${gramsForThisFlour.toFixed(1)} g</strong></li>`;
-      }).join('');
-
-      if (method === 'direct') {
-        recipeOutputContainer.innerHTML = `
-          <div>
-            <h3 class="text-sm font-bold text-amber-400 mb-3 uppercase tracking-wider">Ricetta Diretto</h3>
-            <ul class="space-y-2 text-sm">
-              <li class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/30 space-y-1">
-                <div class="flex justify-between items-center font-medium text-slate-300"><span>🌾 Farina Totale</span><span class="text-amber-400 font-bold">${flourTot.toFixed(1)} g</span></div>
-                <ul class="space-y-0.5 pt-1">${blendIngredientsHTML}</ul>
-              </li>
-              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>💧 Acqua</span><span class="text-amber-400 font-bold">${waterTot.toFixed(1)} g</span></li>
-              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧂 Sale</span><span class="text-amber-400 font-bold">${saltTot.toFixed(1)} g</span></li>
-              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧫 Lievito</span><span class="text-amber-400 font-bold">${yeastTot < 1 ? yeastTot.toFixed(2) : yeastTot.toFixed(1)} g</span></li>
+    } g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🫒 Olio</span><span class="text-amber-400 font-bold">${oilTot.toFixed(1)} g</span></li>
             </ul>
           </div>
