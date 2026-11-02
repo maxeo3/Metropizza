@@ -1,4 +1,4 @@
-MetroPizza - Multi-Blend W Engine
+🍕 MetroPizza - Multi-Blend W Engine
 
 Calcolatore professionale per impasti pizza con supporto Blend Farine, calcolo automatico del lievito, metodo diretto e indiretto, archivio ricette e gestione catalogo farine.
 
