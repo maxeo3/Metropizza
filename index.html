@@ -269,11 +269,11 @@ const FLOUR_FACTORS = {
   { id: 'f4', name: 'Le 5 Stagioni Superior', wNum: 330, w: 'W 330', protein: '13.5%', type: 'tipo1', favorite: false },
   { id: 'f5', name: 'Manitoba Oro', wNum: 380, w: 'W 380', protein: '14.5%', type: 'raffinata', favorite: false }
 ];
-    let customFlours = JSON.parse(localStorage.getItem('doughmetry_flours')) || [];
-    let savedRecipes = JSON.parse(localStorage.getItem('doughmetry_recipes')) || [];
+    let customFlours = JSON.parse(localStorage.getItem('metropizza_flours')) || [];
+    let savedRecipes = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
 
     // Blend attivo (array di righe: [{id, pct}])
-    let activeBlend = JSON.parse(localStorage.getItem('doughmetry_blend')) || [
+    let activeBlend = JSON.parse(localStorage.getItem('metropizza_blend')) || [
       { flourId: 'f2', pct: 100 }
     ];
 
@@ -331,7 +331,7 @@ const FLOUR_FACTORS = {
       if (def) { def.favorite = !def.favorite; }
       else {
         const cust = customFlours.find(f => f.id === id);
-        if (cust) { cust.favorite = !cust.favorite; localStorage.setItem('doughmetry_flours', JSON.stringify(customFlours)); }
+        if (cust) { cust.favorite = !cust.favorite; localStorage.setItem('metropizza_flours', JSON.stringify(customFlours)); }
       }
       renderCatalog();
       renderBlendRows();
@@ -341,7 +341,7 @@ const FLOUR_FACTORS = {
     window.deleteCatalogFlour = (id) => {
       if (confirm("Eliminare questa farina?")) {
         customFlours = customFlours.filter(f => f.id !== id);
-        localStorage.setItem('doughmetry_flours', JSON.stringify(customFlours));
+        localStorage.setItem('metropizza_flours', JSON.stringify(customFlours));
         activeBlend = activeBlend.filter(b => b.flourId !== id);
         if (activeBlend.length === 0) activeBlend = [{ flourId: getAllFlours()[0].id, pct: 100 }];
         renderCatalog();
@@ -388,7 +388,7 @@ const FLOUR_FACTORS = {
         customFlours.push({ id: 'custom_' + Date.now(), name, wNum: calcW, w: 'W ' + calcW, protein: protVal + '%', type:flourType, favorite: true });
       }
 
-      localStorage.setItem('doughmetry_flours', JSON.stringify(customFlours));
+      localStorage.setItem('metropizza_flours', JSON.stringify(customFlours));
       flourModal.classList.add('hidden');
       renderCatalog();
       renderBlendRows();
@@ -454,7 +454,7 @@ const FLOUR_FACTORS = {
 };
 
     function saveAndCalc() {
-      localStorage.setItem('doughmetry_blend', JSON.stringify(activeBlend));
+      localStorage.setItem('metropizza_blend', JSON.stringify(activeBlend));
       renderBlendRows();
       calculate();
     }
@@ -752,7 +752,14 @@ const finalWater =
     }
 
     saveRecipeBtn.onclick = () => {
-      if (!currentCalculation) return;
+      if (!currentCalculation){
+
+    alert(
+      "Prima correggi il blend e assicurati che il calcolo sia valido."
+    );
+
+    return;
+}
       savedRecipes.unshift({
         id: 'rec_' + Date.now(),
         date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }),
@@ -760,7 +767,7 @@ const finalWater =
         rating: 0,
         comment: ''
       });
-      localStorage.setItem('doughmetry_recipes', JSON.stringify(savedRecipes));
+      localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes));
       renderHistory();
     };
 
@@ -799,18 +806,18 @@ const finalWater =
 
     window.rateRecipe = (id, r) => {
       const item = savedRecipes.find(x => x.id === id);
-      if (item) { item.rating = r; localStorage.setItem('doughmetry_recipes', JSON.stringify(savedRecipes)); renderHistory(); }
+      if (item) { item.rating = r; localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes)); renderHistory(); }
     };
 
     window.updateComment = (id, c) => {
       const item = savedRecipes.find(x => x.id === id);
-      if (item) { item.comment = c; localStorage.setItem('doughmetry_recipes', JSON.stringify(savedRecipes)); }
+      if (item) { item.comment = c; localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes)); }
     };
 
     window.deleteRecipe = (id) => {
       if (confirm("Eliminare questa ricetta dall'archivio?")) {
         savedRecipes = savedRecipes.filter(x => x.id !== id);
-        localStorage.setItem('doughmetry_recipes', JSON.stringify(savedRecipes));
+        localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes));
         renderHistory();
       }
     };
