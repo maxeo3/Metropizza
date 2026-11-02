@@ -837,6 +837,31 @@ function renderHistory() {
 window.onload = function() {
     renderHistory();
 };
+<script>
+  // 1. Verifica immediata
+  console.log("LocalStorage 'metropizza_recipes':", localStorage.getItem('metropizza_recipes'));
+
+  // 2. Funzione di rendering forzata
+  function debugHistory() {
+    const grid = document.getElementById('historyGrid');
+    const data = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
+    
+    console.log("Ricette trovate:", data.length);
+    
+    if (data.length === 0) {
+      grid.innerHTML = '<p class="text-white">Archivio vuoto, salva una ricetta!</p>';
+    } else {
+      grid.innerHTML = data.map(r => `
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-white">
+          <p class="font-bold">${r.date}</p>
+          <p class="text-xs">${r.data.numBalls} panetti | ${r.data.blendDesc}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  // 3. Esegui subito
+  debugHistory();
 </script>  
 </body>
 </html>
