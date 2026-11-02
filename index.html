@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doughmetry Master Pro - Con Calcolo W Automatico</title>
+  <title>Doughmetry Master Pro - Ordinato</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome -->
@@ -30,11 +30,11 @@
           <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
             Doughmetry Master
           </h1>
-          <p class="text-xs text-slate-400">Calcolatore Avanzato con W Automatico & Storico</p>
+          <p class="text-xs text-slate-400">Calcolatore Avanzato con Sequenza Ottimizzata</p>
         </div>
       </div>
       <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-mono">
-        v4.5 Ultimate
+        v4.6 Pro
       </span>
     </div>
   </header>
@@ -44,7 +44,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <!-- Form Parametri (Colonna Sinistra) -->
+      <!-- Form Parametri (Colonna Sinistra - Ordinata) -->
       <section class="lg:col-span-7 space-y-6">
         
         <!-- 0. Metodo di Impasto -->
@@ -101,45 +101,10 @@
           </div>
         </div>
 
-        <!-- 2. Selezione & Creazione Farina (Con Calcolo W Automatico da Proteine) -->
-        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-3">
-          <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-            <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
-              <i class="fa-solid fa-wheat-awn text-amber-500"></i> 2. Farina Utilizzata
-            </h2>
-            <button type="button" id="toggleAddFlourBtn" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500/20 transition">
-              <i class="fa-solid fa-plus"></i> Crea Nuova Farina
-            </button>
-          </div>
-
-          <!-- Select Farina -->
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona la Farina dal tuo Catalogo</label>
-            <select id="flourSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition text-sm">
-            </select>
-          </div>
-
-          <!-- Form Aggiunta Farina Custom (Con Proteine -> W Automatico) -->
-          <div id="addFlourForm" class="hidden p-3 bg-slate-900/90 border border-amber-500/30 rounded-xl space-y-3 mt-2">
-            <h3 class="text-xs font-bold text-amber-400">Aggiungi Farina (Calcolo W Automatico)</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <input type="text" id="newFlourName" placeholder="Nome (es. Farina Conad)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
-              <input type="number" id="newFlourProtein" placeholder="Proteine % sul retro (es. 12)" step="0.1" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
-            </div>
-            <p class="text-[10px] text-slate-400 italic">* Inserisci le proteine % indicate sulla confezione: il sistema ricaverà il W automaticamente.</p>
-
-            <div class="flex justify-end gap-2">
-              <button type="button" id="cancelAddFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400">Annulla</button>
-              <button type="button" id="saveCustomFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold">Salva Farina</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Percentuali Idratazione & Sale -->
+        <!-- 2. Percentuali Idratazione & Sale -->
         <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-4">
           <h2 class="text-base font-semibold mb-2 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
-            <i class="fa-solid fa-flask text-amber-500"></i> 3. Percentuali Totali
+            <i class="fa-solid fa-flask text-amber-500"></i> 2. Percentuali Totali
           </h2>
 
           <div>
@@ -167,10 +132,10 @@
           </div>
         </div>
 
-        <!-- 4. Tempi e Temperature -->
+        <!-- 3. Tempi e Temperature -->
         <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-4">
           <h2 class="text-base font-semibold mb-2 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
-            <i class="fa-solid fa-temperature-three-quarters text-amber-500"></i> 4. Tempi & Temperature
+            <i class="fa-solid fa-temperature-three-quarters text-amber-500"></i> 3. Tempi & Temperature
           </h2>
 
           <div>
@@ -201,6 +166,41 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Temp. Frigo (°C)</label>
               <input type="number" id="tempFridge" value="4" min="1" max="12" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Selezione & Creazione Farina (Spostata alla fine) -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+            <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-wheat-awn text-amber-500"></i> 4. Farina Utilizzata
+            </h2>
+            <button type="button" id="toggleAddFlourBtn" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500/20 transition">
+              <i class="fa-solid fa-plus"></i> Crea Nuova Farina
+            </button>
+          </div>
+
+          <!-- Select Farina -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona la Farina dal tuo Catalogo</label>
+            <select id="flourSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition text-sm">
+            </select>
+          </div>
+
+          <!-- Form Aggiunta Farina Custom (Con Proteine -> W Automatico) -->
+          <div id="addFlourForm" class="hidden p-3 bg-slate-900/90 border border-amber-500/30 rounded-xl space-y-3 mt-2">
+            <h3 class="text-xs font-bold text-amber-400">Aggiungi Farina (Calcolo W Automatico)</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <input type="text" id="newFlourName" placeholder="Nome (es. Farina Conad)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
+              <input type="number" id="newFlourProtein" placeholder="Proteine % sul retro (es. 12)" step="0.1" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
+            </div>
+            <p class="text-[10px] text-slate-400 italic">* Inserisci le proteine % indicate sulla confezione: il sistema ricaverà il W automaticamente.</p>
+
+            <div class="flex justify-end gap-2">
+              <button type="button" id="cancelAddFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400">Annulla</button>
+              <button type="button" id="saveCustomFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold">Salva Farina</button>
             </div>
           </div>
         </div>
@@ -367,7 +367,6 @@
     toggleAddFlourBtn.addEventListener('click', () => addFlourForm.classList.toggle('hidden'));
     cancelAddFlourBtn.addEventListener('click', () => addFlourForm.classList.add('hidden'));
 
-    // Funzione calcolo automatico W da proteine
     function getWFromProteins(prot) {
       if (prot < 10.5) return 170;
       if (prot < 11.5) return 220;
