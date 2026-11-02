@@ -1,6 +1,6 @@
 {
-  "name": "Doughmetry Master Pro",
-  "short_name": "Doughmetry",
+  "name": "MetroPizza Master Pro",
+  "short_name": "MetroPizza",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
