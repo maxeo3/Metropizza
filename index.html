@@ -1,6 +1,235 @@
-<link rel="manifest" href="manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
-</script>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doughmetry Master Pro</title>
+  
+  <!-- PWA Manifest & Service Worker Registration -->
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans pb-12">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/70 backdrop-blur py-4 px-6 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-amber-500/20 p-2 rounded-xl border border-amber-500/30">
+          <i class="fa-solid fa-pizza-slice text-amber-500 text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+            Doughmetry Master
+          </h1>
+          <p class="text-xs text-slate-400">Calcolatore Avanzato con Storico, Farine & Rating</p>
+        </div>
+      </div>
+      <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-mono">
+        v4.0 Ultimate
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 space-y-8">
+
+    <!-- Sezione Principale: Calcolatore -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Form Parametri (Colonna Sinistra) -->
+      <section class="lg:col-span-7 space-y-6">
+        
+        <!-- 0. Metodo di Impasto -->
+        <div class="bg-slate-800/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur shadow-lg shadow-amber-500/5">
+          <h2 class="text-base font-semibold mb-3 text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-diagram-project"></i> 0. Metodo d'Impasto
+          </h2>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <button type="button" id="btnDirect" class="method-btn py-2.5 px-4 rounded-xl font-medium text-sm border transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 border-amber-500 shadow">
+              <i class="fa-solid fa-bolt"></i> Diretto
+            </button>
+            <button type="button" id="btnIndirect" class="method-btn py-2.5 px-4 rounded-xl font-medium text-sm border transition flex items-center justify-center gap-2 bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500">
+              <i class="fa-solid fa-clock-rotate-left"></i> Indiretto
+            </button>
+          </div>
+
+          <!-- Opzioni Metodo Indiretto -->
+          <div id="indirectPanel" class="hidden space-y-4 pt-3 border-t border-slate-700/50">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Tipo Prefermento</label>
+                <select id="prefermentType" class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 text-sm">
+                  <option value="biga">Biga (Idro 50%)</option>
+                  <option value="poolish">Poolish (Idro 100%)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Farina nel Prefermento (% su totale)</label>
+                <input type="number" id="prefermentPct" value="50" min="10" max="100" step="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 text-sm">
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 italic" id="prefermentDesc">
+              * Biga: Prefermento solido. Sviluppa alveolatura grande e crosta croccante.
+            </p>
+          </div>
+        </div>
+
+        <!-- 1. Dimensioni Impasto -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur">
+          <h2 class="text-base font-semibold mb-4 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-weight-hanging text-amber-500"></i> 1. Resa & Quantità
+          </h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">N° Panetti</label>
+              <input type="number" id="numBalls" value="4" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Peso Panetto (g)</label>
+              <input type="number" id="ballWeight" value="250" min="10" step="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Selezione & Creazione Farina -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+            <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-wheat-awn text-amber-500"></i> 2. Farina Utilizzata
+            </h2>
+            <button type="button" id="toggleAddFlourBtn" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500/20 transition">
+              <i class="fa-solid fa-plus"></i> Crea Nuova Farina
+            </button>
+          </div>
+
+          <!-- Select Farina -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona la Farina dal tuo Catalogo</label>
+            <select id="flourSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition text-sm">
+            </select>
+          </div>
+
+          <!-- Form Aggiunta Farina Custom -->
+          <div id="addFlourForm" class="hidden p-3 bg-slate-900/90 border border-amber-500/30 rounded-xl space-y-3 mt-2">
+            <h3 class="text-xs font-bold text-amber-400">Aggiungi Farina al Catalogo Personale</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <input type="text" id="newFlourName" placeholder="Nome (es. Caputo Cuoco)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
+              <input type="text" id="newFlourW" placeholder="Forza W (es. W300)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
+              <input type="text" id="newFlourProtein" placeholder="Proteine % (es. 13%)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-2">
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" id="cancelAddFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400">Annulla</button>
+              <button type="button" id="saveCustomFlourBtn" class="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold">Salva Farina</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Percentuali Idratazione & Sale -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-4">
+          <h2 class="text-base font-semibold mb-2 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-flask text-amber-500"></i> 3. Percentuali Totali
+          </h2>
+
+          <div>
+            <div class="flex justify-between text-xs font-medium mb-1">
+              <span class="text-slate-400">Idratazione Totale</span>
+              <span class="text-amber-400 font-bold" id="hydrationVal">65%</span>
+            </div>
+            <input type="range" id="hydration" min="50" max="90" value="65" class="w-full accent-amber-500 cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-medium mb-1">
+              <span class="text-slate-400">Sale (su farina)</span>
+              <span class="text-amber-400 font-bold" id="saltVal">3%</span>
+            </div>
+            <input type="range" id="salt" min="1" max="4.5" step="0.1" value="3" class="w-full accent-amber-500 cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-medium mb-1">
+              <span class="text-slate-400">Olio / Grasso</span>
+              <span class="text-amber-400 font-bold" id="oilVal">0%</span>
+            </div>
+            <input type="range" id="oil" min="0" max="10" step="0.5" value="0" class="w-full accent-amber-500 cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 4. Tempi e Temperature -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-4">
+          <h2 class="text-base font-semibold mb-2 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-temperature-three-quarters text-amber-500"></i> 4. Tempi & Temperature
+          </h2>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Tipo di Lievito</label>
+            <select id="yeastType" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition text-sm">
+              <option value="fresh">Lievito di Birra Fresco (LDB)</option>
+              <option value="dry">Lievito di Birra Secco (IDY)</option>
+              <option value="sourdough">Lievito Madre (LM)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 border-t border-slate-700/30 pt-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Ore Temp. Ambiente</label>
+              <input type="number" id="hoursRoom" value="8" min="0" max="72" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Temp. Ambiente (°C)</label>
+              <input type="number" id="tempRoom" value="20" min="10" max="38" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 border-t border-slate-700/30 pt-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Ore in Frigo</label>
+              <input type="number" id="hoursFridge" value="16" min="0" max="120" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Temp. Frigo (°C)</label>
+              <input type="number" id="tempFridge" value="4" min="1" max="12" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Risultati / Ricetta (Colonna Destra) -->
+      <section class="lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- Card Riepilogo Peso & Ore -->
+        <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-slate-950 font-bold shadow-xl shadow-orange-500/10">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-xs uppercase tracking-wider opacity-80">Peso Impasto Totale</span>
+              <div class="text-4xl mt-1" id="totalWeightDisplay">1000 g</div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs uppercase tracking-wider opacity-80">Tempo Totale</span>
+              <div class="text-2xl mt-1" id="totalHoursDisplay">24 h</div>
+            </div>
+          </div>
+          
+          <div class="mt-4 pt-3 border-t border-slate-950/20 text-xs font-medium flex justify-between">
+            <span>Metodo Attivo:</span>
+            <span id="activeMethodBadge" class="font-bold uppercase tracking-wider bg-slate-950 text-amber-400 px-2 py-0.5 rounded">DIRETTO</span>
+          </div>
+        </div>
+
+        <!-- BOX FORZA FARINA (W) RECOMMENDER -->
+        <div class="bg-slate-800/80 border border-cyan-500/30 rounded-2xl p-4 backdrop-blur shadow-md">
+          <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            
