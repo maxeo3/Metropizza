@@ -192,7 +192,17 @@
         <input type="hidden" id="editFlourId">
         <div class="space-y-3">
           <div><label class="block text-xs text-slate-400 mb-1">Nome Farina</label><input type="text" id="modalFlourName" placeholder="es. Caputo Cuoco" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Proteine % (sul retro)</label><input type="number" id="modalFlourProtein" placeholder="es. 13" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"></div>
+          <div>  <label class="block text-xs text-slate-400 mb-1">Tipo Farina</label><select
+      id="modalFlourType"
+      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+
+      <option value="raffinata">Raffinata / 00</option>
+      <option value="tipo1">Tipo 1</option>
+      <option value="tipo2">Tipo 2</option>
+      <option value="integrale">Integrale</option>
+
+  </select>
+</div> placeholder="es. 13" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"></div>
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" id="closeModalBtn" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs">Annulla</button>
@@ -226,8 +236,62 @@
 
   <script>
     let method = 'direct';
+let currentCalculation = null;
+
+const FLOUR_FACTORS = {
+  raffinata: 1.00,
+  tipo1: 0.97,
+  tipo2: 0.94,
+  integrale: 0.88
+};
 
     const defaultFlours = [
+  {
+    id:'f1',
+    name:'Farina Tipo 00 Generica',
+    wNum:180,
+    w:'W 180',
+    protein:'10%',
+    type:'raffinata',
+    favorite:false
+  },
+  {
+    id:'f2',
+    name:'Caputo Pizzeria',
+    wNum:260,
+    w:'W 260',
+    protein:'12.5%',
+    type:'raffinata',
+    favorite:true
+  },
+  {
+    id:'f3',
+    name:'Caputo Cuoco / Chef',
+    wNum:300,
+    w:'W 300',
+    protein:'13%',
+    type:'raffinata',
+    favorite:false
+  },
+  {
+    id:'f4',
+    name:'Le 5 Stagioni Superior',
+    wNum:330,
+    w:'W 330',
+    protein:'13.5%',
+    type:'tipo1',
+    favorite:false
+  },
+  {
+    id:'f5',
+    name:'Manitoba Oro',
+    wNum:380,
+    w:'W 380',
+    protein:'14.5%',
+    type:'raffinata',
+    favorite:false
+  }
+];
       { id: 'f1', name: 'Farina Tipo 00 Generica', wNum: 180, w: 'W 180', protein: '10%', favorite: false },
       { id: 'f2', name: 'Caputo Pizzeria', wNum: 260, w: 'W 260', protein: '12.5%', favorite: true },
       { id: 'f3', name: 'Caputo Cuoco / Chef', wNum: 300, w: 'W 300', protein: '13%', favorite: false },
@@ -251,6 +315,7 @@
     const editFlourId = document.getElementById('editFlourId');
     const modalFlourName = document.getElementById('modalFlourName');
     const modalFlourProtein = document.getElementById('modalFlourProtein');
+	const modalFlourType = document.getElementById('modalFlourType');
     const blendRowsContainer = document.getElementById('blendRowsContainer');
     const addBlendRowBtn = document.getElementById('addBlendRowBtn');
     const catalogList = document.getElementById('catalogList');
@@ -279,7 +344,7 @@
               <button onclick="toggleFavorite('${f.id}')" class="text-amber-400 hover:scale-110 transition"><i class="fa-${f.favorite ? 'solid' : 'regular'} fa-star"></i></button>
               <strong class="text-slate-200">${f.name}</strong>
             </div>
-            <span class="text-[10px] text-slate-400">${f.w} - Prot: ${f.protein}</span>
+            <span class="text-[10px] text-slate-400">${f.w} - Prot: ${f.protein} - ${f.type || 'raffinata'}</span>
           </div>
           ${!defaultFlours.some(df => df.id === f.id) ? `
             <div class="flex gap-1.5">
@@ -322,6 +387,7 @@
       editFlourId.value = found.id;
       modalFlourName.value = found.name;
       modalFlourProtein.value = parseFloat(found.protein);
+	  modalFlourType.value =  found.type || 'raffinata';
       flourModal.classList.remove('hidden');
     };
 
@@ -330,11 +396,14 @@
       editFlourId.value = "";
       modalFlourName.value = "";
       modalFlourProtein.value = "";
+	  modalFlourType.value = 'raffinata';
+	  
       flourModal.classList.remove('hidden');
     };
     closeModalBtn.onclick = () => flourModal.classList.add('hidden');
 
     saveModalFlourBtn.onclick = () => {
+	  const flourType =  modalFlourType.value;
       const name = modalFlourName.value.trim();
       const protVal = parseFloat(modalFlourProtein.value);
       const editingId = editFlourId.value;
@@ -344,9 +413,9 @@
 
       if (editingId) {
         const item = customFlours.find(f => f.id === editingId);
-        if (item) { item.name = name; item.wNum = calcW; item.w = 'W ' + calcW; item.protein = protVal + '%'; }
+        if (item) { item.name = name; item.wNum = calcW; item.w = 'W ' + calcW; item.protein = protVal + '%'; item.type = flourType; }
       } else {
-        customFlours.push({ id: 'custom_' + Date.now(), name, wNum: calcW, w: 'W ' + calcW, protein: protVal + '%', favorite: true });
+        customFlours.push({ id: 'custom_' + Date.now(), name, wNum: calcW, w: 'W ' + calcW, protein: protVal + '%', type:flourType, favorite: true });
       }
 
       localStorage.setItem('doughmetry_flours', JSON.stringify(customFlours));
@@ -407,7 +476,21 @@
       activeMethodBadge.textContent = 'INDIRETTO (' + prefermentType.value.toUpperCase() + ')';
       calculate();
     };
+	function getWholemealHydrationBoost(percent){
 
+	if(percent <= 10) return 0;
+	if(percent <= 20) return 2;
+	if(percent <= 30) return 4;
+	if(percent <= 40) return 6;
+	if(percent <= 50) return 8;
+
+	return 10;
+}
+
+function getTypeFactor(type){
+
+  return FLOUR_FACTORS[type] || 1;
+}
     function calculateYeast(hR, tR, hF, tF, type) {
       const eq = (hR * Math.pow(tR / 20, 2.1)) + (hF * Math.pow(tF / 20, 2.1));
       if (eq <= 0) return { pct: 0, eqHours: 0 };
@@ -437,8 +520,28 @@
 
       // Calcolo Blend Farine (Media Ponderata W e Proteine)
       const allFlours = [...defaultFlours, ...customFlours];
-      let totalPct = activeBlend.reduce((sum, b) => sum + b.pct, 0);
-      if (totalPct <= 0) totalPct = 100;
+      let totalPct =
+activeBlend.reduce(
+  (sum, b) => sum + b.pct,
+  0
+);
+
+if(totalPct <= 0)
+  totalPct = 100;
+
+	if(Math.abs(totalPct - 100) > 0.01){
+
+	alertBox.className =
+		"p-4 rounded-xl border flex items-start gap-3 text-xs bg-red-500/15 border-red-500/40 text-red-300";
+
+	alertTitle.textContent =
+		"Blend non valido";
+
+	alertMessage.textContent =
+		`Le percentuali sommano ${totalPct}% e non 100%.`;
+
+  return;
+}
 
       let weightedW = 0;
       let blendDescription = [];
@@ -447,9 +550,42 @@
         const flourObj = allFlours.find(f => f.id === b.flourId) || allFlours[0];
         const fW = flourObj.wNum || parseInt(flourObj.w.replace(/\D/g,'')) || 260;
         const weightRatio = b.pct / totalPct;
-        weightedW += fW * weightRatio;
+        const correctedW =
+  fW *
+  getTypeFactor(
+      flourObj.type || 'raffinata'
+  );
+
+weightedW +=
+  correctedW *
+  weightRatio;
         blendDescription.push(`${b.pct}% ${flourObj.name} (${flourObj.w})`);
       });
+	  let wholemealPercent = 0;
+
+activeBlend.forEach(b => {
+
+  const flourObj =
+      allFlours.find(
+          f => f.id === b.flourId
+      );
+
+  if (
+      flourObj &&
+      flourObj.type === 'integrale'
+  ) {
+      wholemealPercent += b.pct;
+  }
+
+});
+
+const hydrationBoost =
+    getWholemealHydrationBoost(
+        wholemealPercent
+    );
+
+const suggestedHydration =
+    hyd + hydrationBoost;
 
       const finalBlendW = Math.round(weightedW);
 
@@ -474,11 +610,40 @@
       else if (yInfo.eqHours > 32) { recWMin = 330; recWMax = 400; }
 
       flourWContainer.innerHTML = `
-        <div class="flex justify-between items-center bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/20">
-          <div><span class="text-slate-400 text-[10px]">Blend Totale:</span> <span class="font-bold text-cyan-300">W ${finalBlendW} medio</span></div>
-          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">Ideale: W ${recWMin} - ${recWMax}</span>
-        </div>
-      `;
+
+<div class="flex justify-between items-center bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/20">
+
+  <div>
+    <span class="text-slate-400 text-[10px]">
+      Blend Totale:
+    </span>
+
+    <span class="font-bold text-cyan-300">
+      W ${finalBlendW}
+    </span>
+  </div>
+
+  <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">
+    Ideale: W ${recWMin}-${recWMax}
+  </span>
+
+</div>
+
+<div class="bg-slate-900/80 p-2.5 rounded-xl border border-amber-500/20 text-xs">
+
+  🌾 Integrale:
+  <strong>${wholemealPercent}%</strong>
+
+  ${
+    hydrationBoost > 0
+    ? `<br>💧 Idratazione consigliata:
+       <strong>${suggestedHydration}%</strong>
+       (+${hydrationBoost}%)`
+    : ''
+  }
+
+</div>
+`;
 
       if (finalBlendW < recWMin - 30) {
         alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-red-500/15 border-red-500/40 text-red-300";
