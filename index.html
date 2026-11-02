@@ -752,24 +752,39 @@ const finalWater =
     }
 
     saveRecipeBtn.onclick = () => {
-      if (!currentCalculation){
 
-    alert(
-      "Prima correggi il blend e assicurati che il calcolo sia valido."
-    );
+    alert("CLICK RICEVUTO");
 
-    return;
-}
-      savedRecipes.unshift({
+    console.log(currentCalculation);
+
+    if (!currentCalculation){
+
+        alert("Calcolo non valido");
+
+        return;
+    }
+
+    savedRecipes.unshift({
         id: 'rec_' + Date.now(),
-        date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        date: new Date().toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }),
         data: { ...currentCalculation },
         rating: 0,
         comment: ''
-      });
-      localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes));
-      renderHistory();
-    };
+    });
+
+    localStorage.setItem(
+        'doughmetry_recipes',
+        JSON.stringify(savedRecipes)
+    );
+
+    renderHistory();
+
+    alert("RICETTA SALVATA");
+};
 
     function renderHistory() {
       historyCountBadge.textContent = `${savedRecipes.length} Ricette`;
