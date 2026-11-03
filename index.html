@@ -752,18 +752,8 @@ const finalWater =
       };
     }
 
-    saveRecipeBtn.onclick = () => {
-
-    alert("CLICK RICEVUTO");
-
-    console.log("currentCalculation =", currentCalculation);
-
-    alert(JSON.stringify(currentCalculation));
-
-    if (!currentCalculation){
-
-        alert("Calcolo non valido");
-
+saveRecipeBtn.onclick = () => {
+    if (!currentCalculation) {
         return;
     }
 
@@ -776,7 +766,7 @@ const finalWater =
     });
 
     localStorage.setItem(
-        'doughmetry_recipes',
+        'metropizza_recipes',
         JSON.stringify(savedRecipes)
     );
 
