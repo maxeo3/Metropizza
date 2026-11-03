@@ -193,25 +193,32 @@
         <div class="space-y-3">
           <div><label class="block text-xs text-slate-400 mb-1">Nome Farina</label><input type="text" id="modalFlourName" placeholder="es. Caputo Cuoco" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"></div>
           <div>
-<div>
-  <label>Tipo Farina</label>
+  </div>
+  <label class="block text-xs text-slate-400 mb-1">
+    Tipo Farina
+  </label>
 
-  <select id="modalFlourType">
+  <select
+      id="modalFlourType"
+      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+
       <option value="raffinata">Raffinata / 00</option>
       <option value="tipo1">Tipo 1</option>
       <option value="tipo2">Tipo 2</option>
       <option value="integrale">Integrale</option>
-  </select>
 
+  </select>
 </div>
 
 <div>
-  <label>Proteine %</label>
+  <label class="block text-xs text-slate-400 mb-1">
+    Proteine %
+  </label>
 
   <input
       type="number"
-      id="modalFlourProtein">
-	        placeholder="es. 13"
+      id="modalFlourProtein"
+      placeholder="es. 13"
       step="0.1"
       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
 </div>
@@ -745,46 +752,71 @@ const finalWater =
       };
     }
 
-document.getElementById('saveRecipeBtn').onclick = () => {
-    if (!currentCalculation) {
-        alert("Nessun calcolo trovato!");
+    saveRecipeBtn.onclick = () => {
+
+    alert("CLICK RICEVUTO");
+
+    console.log("currentCalculation =", currentCalculation);
+
+    alert(JSON.stringify(currentCalculation));
+
+    if (!currentCalculation){
+
+        alert("Calcolo non valido");
+
         return;
     }
 
-    const newRecipe = {
+    savedRecipes.unshift({
         id: 'rec_' + Date.now(),
         date: new Date().toLocaleDateString('it-IT'),
         data: { ...currentCalculation },
         rating: 0,
         comment: ''
-    };
+    });
 
-    savedRecipes.unshift(newRecipe);
-    localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes));
+    localStorage.setItem(
+        'doughmetry_recipes',
+        JSON.stringify(savedRecipes)
+    );
+
     renderHistory();
-    alert("Ricetta salvata!");
+
+    alert("RICETTA SALVATA");
 };
 
-function renderHistory() {
-  const grid = document.getElementById('historyGrid');
-  if (savedRecipes.length === 0) {
-    grid.innerHTML = `<p class="text-slate-500 text-xs">Nessuna ricetta archiviata.</p>`;
-    return;
-  }
-  grid.innerHTML = savedRecipes.map(rec => `
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
-      <div class="flex justify-between font-bold text-xs">
-        <span>${rec.date}</span>
-        <button onclick="deleteRecipe('${rec.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
-      </div>
-      <p class="text-[10px] text-amber-400">${rec.data.numBalls} panetti | Blend: ${rec.data.blendDesc}</p>
-      <div class="flex gap-1 text-amber-500">
-        ${[1,2,3,4,5].map(s => `<i class="fa-${s<=rec.rating?'solid':'regular'} fa-star cursor-pointer" onclick="rateRecipe('${rec.id}', ${s})"></i>`).join('')}
-      </div>
-      <textarea onchange="updateComment('${rec.id}', this.value)" class="w-full bg-slate-950 p-2 rounded text-white text-[10px]">${rec.comment || ''}</textarea>
-    </div>
-  `).join('');
-}
+    function renderHistory() {
+      historyCountBadge.textContent = `${savedRecipes.length} Ricette`;
+      if (savedRecipes.length === 0) {
+        historyGrid.innerHTML = `<div class="col-span-full py-6 text-center text-slate-500 text-xs">Nessuna ricetta salvata.</div>`;
+        return;
+      }
+      historyGrid.innerHTML = savedRecipes.map(rec => `
+        <div class="bg-slate-900/90 border border-slate-700/60 rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-start border-b border-slate-800 pb-2">
+            <div>
+              <span class="text-[10px] font-mono text-amber-400 uppercase">${rec.data.method}</span>
+              <h4 class="text-xs font-bold text-slate-200">${rec.data.numBalls} panetti da ${rec.data.ballWeight}g (${rec.data.totalWeight}g)</h4>
+              <p class="text-[10px] text-slate-400">Blend: ${rec.data.blendDesc} (Media: W ${rec.data.blendW})</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-500">${rec.date}</span>
+              <button onclick="deleteRecipe('${rec.id}')" class="text-red-400 hover:text-red-300 text-xs mt-1 block"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[11px] bg-slate-950 p-2 rounded-xl border border-slate-800">
+            <div>Idro: <strong>${rec.data.hydration}%</strong></div>
+            <div>Farina: <strong>${Math.round(rec.data.flourTot)}g</strong></div>
+            <div>Acqua: <strong>${Math.round(rec.data.waterTot)}g</strong></div>
+            <div>Lievito: <strong>${rec.data.yeastTot.toFixed(2)}g</strong></div>
+          </div>
+          <div class="flex gap-1 text-amber-400 text-sm">
+            ${[1, 2, 3, 4, 5].map(s => `<i class="fa-${s <= rec.rating ? 'solid' : 'regular'} fa-star cursor-pointer" onclick="rateRecipe('${rec.id}', ${s})"></i>`).join('')}
+          </div>
+          <textarea onchange="updateComment('${rec.id}', this.value)" placeholder="Note di assaggio..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 resize-none h-12">${rec.comment || ''}</textarea>
+        </div>
+      `).join('');
+    }
 
     window.rateRecipe = (id, r) => {
       const item = savedRecipes.find(x => x.id === id);
@@ -809,59 +841,6 @@ function renderHistory() {
     renderBlendRows();
     calculate();
     renderHistory();
-function renderHistory() {
-    const grid = document.getElementById('historyGrid');
-    const saved = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
-    
-    if (saved.length === 0) {
-        grid.innerHTML = `<p class="text-slate-500 text-xs">Nessuna ricetta archiviata.</p>`;
-        return;
-    }
-
-    grid.innerHTML = saved.map(rec => `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
-          <div class="flex justify-between font-bold text-xs">
-            <span>${rec.date}</span>
-            <button onclick="deleteRecipe('${rec.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
-          </div>
-          <p class="text-[10px] text-amber-400">Blend: ${rec.data.blendDesc}</p>
-          <div class="flex gap-1 text-amber-500 text-sm">
-            ${[1,2,3,4,5].map(s => `<i class="fa-${s<=rec.rating?'solid':'regular'} fa-star cursor-pointer" onclick="rateRecipe('${rec.id}', ${s})"></i>`).join('')}
-          </div>
-          <textarea onchange="updateComment('${rec.id}', this.value)" class="w-full bg-slate-950 p-2 rounded text-white text-[10px]">${rec.comment || ''}</textarea>
-        </div>
-    `).join('');
-}
-
-// Forza il rendering al caricamento della pagina
-window.onload = function() {
-    renderHistory();
-};
-<script>
-  // 1. Verifica immediata
-  console.log("LocalStorage 'metropizza_recipes':", localStorage.getItem('metropizza_recipes'));
-
-  // 2. Funzione di rendering forzata
-  function debugHistory() {
-    const grid = document.getElementById('historyGrid');
-    const data = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
-    
-    console.log("Ricette trovate:", data.length);
-    
-    if (data.length === 0) {
-      grid.innerHTML = '<p class="text-white">Archivio vuoto, salva una ricetta!</p>';
-    } else {
-      grid.innerHTML = data.map(r => `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-white">
-          <p class="font-bold">${r.date}</p>
-          <p class="text-xs">${r.data.numBalls} panetti | ${r.data.blendDesc}</p>
-        </div>
-      `).join('');
-    }
-  }
-
-  // 3. Esegui subito
-  debugHistory();
-</script>  
+  </script>
 </body>
 </html>
