@@ -1,291 +1,241 @@
-🍕 MetroPizza - Multi-Blend W Engine
+# 🍕 MetroPizza - Multi-Blend W Engine
 
 Calcolatore professionale per impasti pizza con supporto Blend Farine, calcolo automatico del lievito, metodo diretto e indiretto, archivio ricette e gestione catalogo farine.
 
-https://img.shields.io/badge/version-6.0-orange https://img.shields.io/badge/PWA-enabled-green https://img.shields.io/badge/offline-ready-blue
+![version](https://img.shields.io/badge/version-6.1-orange) ![PWA](https://img.shields.io/badge/PWA-enabled-green) ![offline](https://img.shields.io/badge/offline-ready-blue)
 
-📋 Panoramica
+## 📋 Panoramica
 
 MetroPizza è una web application progettata per pizzaioli, appassionati e professionisti che desiderano calcolare impasti in modo preciso utilizzando:
 
-Impasto diretto
-Impasto indiretto
-Biga
-Poolish
-Blend di farine multiple
-Calcolo automatico del lievito
-Gestione farine personalizzate
-Archivio ricette
-Progressive Web App (PWA)
+- Impasto diretto
+- Impasto indiretto (Biga e Poolish)
+- Blend di farine (fino a 2 farine)
+- Calcolo automatico del lievito
+- Gestione farine personalizzate
+- Archivio ricette
+- Progressive Web App (PWA)
 
 L'obiettivo è simulare il comportamento reale delle farine tenendo conto non soltanto del valore W, ma anche della tipologia della farina e della sua presenza all'interno del blend.
 
-🚀 Funzionalità principali
-Metodo Diretto
+## 🚀 Funzionalità principali
 
-Calcolo classico dell'impasto.
+### Metodo Diretto
 
-L'utente inserisce:
+Calcolo classico dell'impasto. L'utente inserisce:
 
-numero panetti
-peso panetto
-idratazione
-sale
-olio
-tempi e temperature
+- numero panetti
+- peso panetto
+- idratazione
+- sale
+- olio
+- tempi e temperature
 
-Il sistema genera automaticamente:
+Il sistema genera automaticamente farina totale (con ripartizione per ogni farina del blend), acqua, sale, olio e lievito necessario.
 
-farina totale
-acqua totale
-sale totale
-olio totale
-lievito necessario
-Metodo Indiretto
+### Metodo Indiretto
 
-Supporta:
+| Prefermento | Idratazione prefermento | Lievito di riferimento nel prefermento |
+|-------------|-------------------------|----------------------------------------|
+| Biga        | 50%                     | 1% della farina del prefermento        |
+| Poolish     | 100%                    | 0,2% della farina del prefermento      |
 
-Biga
-Idratazione prefermento: 50%
-Poolish
-Idratazione prefermento: 100%
+Le dosi di lievito sono per il lievito fresco; con il lievito secco vengono divise per 3. Il lievito nel prefermento non supera mai il totale calcolato: l'eventuale resto va nell'impasto finale. Il lievito madre viene messo tutto nell'impasto finale.
 
-L'utente può decidere:
+L'utente sceglie il tipo di prefermento e la percentuale di farina da usare nel prefermento. Il sistema divide gli ingredienti tra:
 
-percentuale farina nel prefermento
-tipo di prefermento
+- **Fase 1 – Prefermento:** farina (ripartita per blend), acqua, lievito
+- **Fase 2 – Impasto finale:** farina (ripartita per blend), acqua, sale, lievito residuo, olio
 
-Il sistema divide automaticamente gli ingredienti tra:
+**Controllo di compatibilità:** se il prefermento richiede più acqua di quella prevista dall'idratazione totale (ad esempio Poolish al 70% con idratazione al 65%), la ricetta non viene mostrata. Compare un avviso con la percentuale massima di farina utilizzabile nel prefermento.
 
-Fase 1
+## 🌾 Sistema Blend Farine
 
-Prefermento
+Il motore consente di combinare fino a 2 farine. Esempio:
 
-Fase 2
-
-Impasto finale
-
-🌾 Sistema Blend Farine
-
-Il motore consente di combinare più farine.
-
-Esempio:
-
-Farina	PercentualeManitoba W380	70%
-Integrale W300	30%
+| Farina         | Percentuale |
+|----------------|-------------|
+| Manitoba W380  | 70%         |
+| Integrale W300 | 30%         |
 
 Il sistema calcola automaticamente:
 
-W medio corretto
-percentuale integrale totale
-suggerimento di idratazione
-equilibrio della forza del blend
-🌾 Tipologie di farina supportate
+- W medio corretto
+- percentuale integrale totale
+- suggerimento di idratazione
+- equilibrio della forza del blend
 
-Ogni farina può essere classificata come:
+Comportamento del blend:
 
-Raffinata / 00
+- con 2 farine, modificando la percentuale di una l'altra si adegua automaticamente per arrivare a 100%;
+- rimuovendo una farina (o eliminandola dal catalogo), quella rimasta torna automaticamente al 100%;
+- se le percentuali non sommano 100%, la ricetta non viene mostrata e il salvataggio è bloccato.
 
-Coefficiente W:
+### Tipologie di farina supportate
 
-Plain Text
-1.00
-Tipo 1
-
-Coefficiente W:
-
-Plain Text
-0.97
-Tipo 2
-
-Coefficiente W:
-
-Plain Text
-0.94
-Integrale
-
-Coefficiente W:
-
-Plain Text
-0.88
+| Tipologia        | Coefficiente W |
+|------------------|----------------|
+| Raffinata / 00   | 1.00           |
+| Tipo 1           | 0.97           |
+| Tipo 2           | 0.94           |
+| Integrale        | 0.88           |
 
 Questo permette di simulare il comportamento reale delle farine meno raffinate.
 
-💧 Correzione automatica dell'idratazione
+### 💧 Correzione automatica dell'idratazione
 
-Le farine integrali assorbono quantità maggiori di acqua.
+Le farine integrali assorbono quantità maggiori di acqua. Il sistema suggerisce automaticamente eventuali aumenti di idratazione:
 
-Il sistema suggerisce automaticamente eventuali aumenti di idratazione.
-
-Integrale nel blend	Aumento idratazione0-10%	+0%
-10-20%	+2%
-20-30%	+4%
-30-40%	+6%
-40-50%	+8%
-oltre 50%	+10%
+| Integrale nel blend | Aumento idratazione |
+|---------------------|---------------------|
+| 0-10%               | +0%                 |
+| 10-20%              | +2%                 |
+| 20-30%              | +4%                 |
+| 30-40%              | +6%                 |
+| 40-50%              | +8%                 |
+| oltre 50%           | +10%                |
 
 Esempio:
 
-Plain Text
+```
 Idratazione impostata: 65%
- 
-Integrale nel blend: 40%
- 
+Integrale nel blend:   40%
 Idratazione consigliata: 71%
-🧠 Smart W Engine
+```
 
-Il motore analizza:
+## 🧠 Smart W Engine
 
-tempi di fermentazione
-temperatura ambiente
-temperatura frigorifero
+Il motore analizza tempi di fermentazione, temperatura ambiente e temperatura frigorifero, li converte in "ore equivalenti" di maturazione e confronta il blend scelto con la forza consigliata:
 
-e confronta il blend scelto con la forza consigliata.
+| Ore equivalenti | W consigliato |
+|-----------------|---------------|
+| fino a 6        | 180-240       |
+| 6-16            | 220-280       |
+| 16-32           | 280-330       |
+| oltre 32        | 330-400       |
 
-Esempio:
+Messaggi mostrati:
 
-Plain Text
-Fermentazione breve
-Consigliato: W 220-280
-Plain Text
-Fermentazione lunga
-Consigliato: W 330-400
+- ✅ Blend bilanciato
+- ⚠️ Blend troppo debole
+- ⚠️ Blend troppo forte
 
-Viene mostrato un messaggio automatico:
-
-✅ Blend bilanciato
-
-⚠️ Blend troppo debole
-
-⚠️ Blend troppo forte
-
-🧫 Calcolo automatico del lievito
+## 🧫 Calcolo automatico del lievito
 
 Supporta:
 
-Lievito Fresco (LDB)
-Lievito Secco (IDY)
-Lievito Madre (LM)
+- Lievito Fresco (LDB)
+- Lievito Secco (IDY)
+- Lievito Madre (LM)
 
-Il quantitativo viene adattato automaticamente in funzione di:
+Il quantitativo viene adattato in funzione di ore e temperatura ambiente e di ore e temperatura frigorifero.
 
-ore a temperatura ambiente
-temperatura ambiente
-ore in frigorifero
-temperatura frigorifero
-⭐ Catalogo Farine
+**Lievito madre:** il LM contiene già farina e acqua, quindi non è un ingrediente da sommare al peso. L'app considera un lievito madre solido idratato al 50% e mostra **farina e acqua da aggiungere**, già al netto di quelle contenute nel LM. Il peso totale dell'impasto resta quello impostato.
 
-L'utente può:
+## ⭐ Catalogo Farine
 
-creare farine personalizzate
-modificarle
-eliminarle
-inserirle nei preferiti
+L'utente può creare, modificare ed eliminare farine personalizzate e inserirle nei preferiti (anche quelle predefinite). I preferiti compaiono in cima alle liste.
 
-Ogni farina contiene:
+Ogni farina contiene: nome, proteine, W stimato (calcolato dalle proteine), tipologia e preferito.
 
-Plain Text
-Nome
-Proteine
-W stimato
-Tipologia
-Preferito
-📚 Archivio Ricette
+## 📚 Archivio Ricette
 
-Tutte le ricette possono essere salvate localmente.
+Tutte le ricette possono essere salvate localmente. Per ogni ricetta vengono memorizzati:
 
-Per ogni ricetta vengono memorizzati:
+- data
+- metodo (e tipo/percentuale di prefermento per l'indiretto)
+- blend utilizzato e W medio
+- ingredienti e tipo di lievito
+- valutazione (stelle)
+- note personali
 
-data
-metodo
-blend utilizzato
-W medio
-ingredienti
-valutazione
-note personali
-📱 Progressive Web App
+## 📱 Progressive Web App
 
-L'app supporta:
+L'app può essere installata su smartphone, tablet e desktop e funziona offline grazie a `manifest.json`, `sw.js` e alle icone locali (`icon.svg`, `icon-192.png`, `icon-512.png`).
 
-installazione su smartphone
-installazione su tablet
-installazione su desktop
-utilizzo offline
+Il Service Worker:
 
-Grazie a:
+- per i file dell'app usa **prima la rete**, così gli aggiornamenti arrivano subito; la copia in cache viene usata solo offline;
+- per le librerie esterne (Tailwind, Font Awesome) usa prima la cache;
+- all'attivazione cancella le cache delle versioni precedenti.
 
-Plain Text
-manifest.json
-sw.js
-💾 Storage Locale
+Per forzare la pulizia completa della cache dopo un aggiornamento importante, incrementa la costante `CACHE` in `sw.js` (es. `metropizza-v3`).
 
-I dati vengono salvati tramite LocalStorage.
+## 💾 Storage Locale
 
-Nessun dato viene inviato a server esterni.
+I dati vengono salvati tramite LocalStorage. Nessun dato viene inviato a server esterni.
 
-Vengono memorizzati:
+| Chiave                     | Contenuto                         |
+|----------------------------|-----------------------------------|
+| `metropizza_flours`        | Farine personalizzate             |
+| `metropizza_default_favs`  | Preferiti tra le farine predefinite |
+| `metropizza_blend`         | Blend attivo                      |
+| `metropizza_recipes`       | Ricette salvate, valutazioni e note |
 
-Plain Text
-Catalogo farine
-Preferiti
-Blend
-Ricette salvate
-Valutazioni
-Note
-🔬 Formula di calcolo W Blend
+Se i dati salvati risultano danneggiati, l'app riparte con i valori predefiniti invece di bloccarsi.
+
+## 🔬 Formula di calcolo W Blend
 
 Formula base:
 
-Plain Text
-W Blend =
-Σ(W × Percentuale)
+```
+W Blend = Σ(W × Percentuale)
+```
 
 Formula corretta:
 
-Plain Text
-W Blend =
-Σ(W × Coefficiente Tipo × Percentuale)
+```
+W Blend = Σ(W × Coefficiente Tipo × Percentuale)
+```
 
-Esempio:
+Esempio con 70% Manitoba W380 e 30% Integrale W300:
 
-Plain Text
-70% Manitoba W380
-30% Integrale W300
-
-Risultato:
-
-Plain Text
-W corretto ≠ 356
- 
+```
+W base     = 356
 W corretto ≈ 345
+```
 
-più vicino al comportamento reale dell'impasto.
+Il valore corretto è più vicino al comportamento reale dell'impasto.
 
-🛠 Tecnologie utilizzate
-HTML5
-JavaScript Vanilla
-Tailwind CSS
-Font Awesome
-LocalStorage
-Service Worker
-Progressive Web App
-📈 Roadmap futura
+## 🛠 Tecnologie utilizzate
 
-Funzionalità pianificate:
+- HTML5
+- JavaScript Vanilla
+- Tailwind CSS (CDN)
+- Font Awesome
+- LocalStorage
+- Service Worker
+- Progressive Web App
 
- Calcolo maturazione automatica
- Calcolo ceneri (Ash Content)
- Database farine professionali
- Supporto Licoli
- Supporto Pasta Madre Solida
- Calcolo temperatura finale impasto
- Gestione impasti ad alta idratazione
- Esportazione PDF
- Condivisione ricette
-📄 Licenza
+## 📝 Novità versione 6.1
+
+- **Metodo indiretto:** niente più acqua negativa in Fase 2, con avviso e percentuale massima di prefermento.
+- **Metodo indiretto:** lievito ripartito tra prefermento e impasto finale; olio e ripartizione del blend anche in Fase 2.
+- **Lievito madre:** farina e acqua del LM scalate da quelle da aggiungere.
+- **Blend:** la farina rimasta torna al 100% dopo una rimozione, e una nuova riga propone una farina diversa.
+- **Blend non valido:** la ricetta non viene mostrata e il salvataggio è bloccato.
+- **Interfaccia:** il badge del metodo si aggiorna al cambio Biga/Poolish.
+- **Interfaccia:** i messaggi su W e i consigli di lavorazione seguono i tempi impostati.
+- **Preferiti:** salvati anche per le farine predefinite.
+- **Sicurezza:** nomi delle farine e note vengono resi in modo sicuro, e i dati salvati danneggiati non bloccano più l'app.
+- **PWA:** Service Worker che prende i file dell'app prima dalla rete e pulisce le cache vecchie; icone locali al posto di quella esterna.
+
+## 📈 Roadmap futura
+
+- [ ] Calcolo maturazione automatica
+- [ ] Calcolo ceneri (Ash Content)
+- [ ] Database farine professionali
+- [ ] Supporto Licoli
+- [ ] Supporto Pasta Madre Solida configurabile
+- [ ] Calcolo temperatura finale impasto
+- [ ] Gestione impasti ad alta idratazione
+- [ ] Esportazione PDF
+- [ ] Condivisione ricette
+
+## 📄 Licenza
 
 Progetto open source rilasciato sotto licenza MIT.
 
-👨‍🍳 Filosofia
+## 👨‍🍳 Filosofia
 
 MetroPizza nasce con l'obiettivo di diventare uno strumento pratico per trasformare dati tecnici (W, proteine, tempi e temperature) in indicazioni realmente utilizzabili durante la produzione di pizza e prodotti lievitati.
