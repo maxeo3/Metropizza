@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -193,35 +196,19 @@
         <div class="space-y-3">
           <div><label class="block text-xs text-slate-400 mb-1">Nome Farina</label><input type="text" id="modalFlourName" placeholder="es. Caputo Cuoco" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"></div>
           <div>
-  </div>
-  <label class="block text-xs text-slate-400 mb-1">
-    Tipo Farina
-  </label>
-
-  <select
-      id="modalFlourType"
-      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
-
-      <option value="raffinata">Raffinata / 00</option>
-      <option value="tipo1">Tipo 1</option>
-      <option value="tipo2">Tipo 2</option>
-      <option value="integrale">Integrale</option>
-
-  </select>
-</div>
-
-<div>
-  <label class="block text-xs text-slate-400 mb-1">
-    Proteine %
-  </label>
-
-  <input
-      type="number"
-      id="modalFlourProtein"
-      placeholder="es. 13"
-      step="0.1"
-      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
-</div>
+            <label class="block text-xs text-slate-400 mb-1">Tipo Farina</label>
+            <select id="modalFlourType" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+              <option value="raffinata">Raffinata / 00</option>
+              <option value="tipo1">Tipo 1</option>
+              <option value="tipo2">Tipo 2</option>
+              <option value="integrale">Integrale</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Proteine %</label>
+            <input type="number" id="modalFlourProtein" placeholder="es. 13" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+          </div>
+        </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" id="closeModalBtn" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs">Annulla</button>
           <button type="button" id="saveModalFlourBtn" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs">Salva</button>
@@ -254,29 +241,86 @@
 
   <script>
     let method = 'direct';
-let currentCalculation = null;
+    let currentCalculation = null;
 
-const FLOUR_FACTORS = {
-  raffinata: 1.00,
-  tipo1: 0.97,
-  tipo2: 0.94,
-  integrale: 0.88
-};
+    const FLOUR_FACTORS = {
+      raffinata: 1.00,
+      tipo1: 0.97,
+      tipo2: 0.94,
+      integrale: 0.88
+    };
+
+    const FLOUR_TYPE_LABELS = {
+      raffinata: 'Raffinata / 00',
+      tipo1: 'Tipo 1',
+      tipo2: 'Tipo 2',
+      integrale: 'Integrale'
+    };
+
+    // Idratazione del prefermento (acqua / farina)
+    const PREFERMENT_HYDRATION = { biga: 0.50, poolish: 1.00 };
+    // Lievito fresco di riferimento nel prefermento (% sulla farina del prefermento)
+    const PREFERMENT_FRESH_YEAST_PCT = { biga: 1.0, poolish: 0.2 };
+    // Lievito madre solido: 50 g di acqua ogni 100 g di farina
+    const LM_HYDRATION = 0.50;
+
+    const YEAST_LABELS = { fresh: 'Lievito fresco', dry: 'Lievito secco', sourdough: 'Lievito madre' };
+    const METHOD_LABELS = { direct: 'Diretto', indirect: 'Indiretto' };
+
+    // --- UTILITY ---
+    function loadJSON(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function saveJSON(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage pieno o non disponibile */ }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function fmtGrams(g) {
+      return Math.abs(g) < 1 ? g.toFixed(2) : g.toFixed(1);
+    }
 
     const defaultFlours = [
-  { id: 'f1', name: 'Farina Tipo 00 Generica', wNum: 180, w: 'W 180', protein: '10%', type: 'raffinata', favorite: false },
-  { id: 'f2', name: 'Caputo Pizzeria', wNum: 260, w: 'W 260', protein: '12.5%', type: 'raffinata', favorite: true },
-  { id: 'f3', name: 'Caputo Cuoco / Chef', wNum: 300, w: 'W 300', protein: '13%', type: 'raffinata', favorite: false },
-  { id: 'f4', name: 'Le 5 Stagioni Superior', wNum: 330, w: 'W 330', protein: '13.5%', type: 'tipo1', favorite: false },
-  { id: 'f5', name: 'Manitoba Oro', wNum: 380, w: 'W 380', protein: '14.5%', type: 'raffinata', favorite: false }
-];
-    let customFlours = JSON.parse(localStorage.getItem('metropizza_flours')) || [];
-    let savedRecipes = JSON.parse(localStorage.getItem('metropizza_recipes')) || [];
-
-    // Blend attivo (array di righe: [{id, pct}])
-    let activeBlend = JSON.parse(localStorage.getItem('metropizza_blend')) || [
-      { flourId: 'f2', pct: 100 }
+      { id: 'f1', name: 'Farina Tipo 00 Generica', wNum: 180, w: 'W 180', protein: '10%', type: 'raffinata', favorite: false },
+      { id: 'f2', name: 'Caputo Pizzeria', wNum: 260, w: 'W 260', protein: '12.5%', type: 'raffinata', favorite: true },
+      { id: 'f3', name: 'Caputo Cuoco / Chef', wNum: 300, w: 'W 300', protein: '13%', type: 'raffinata', favorite: false },
+      { id: 'f4', name: 'Le 5 Stagioni Superior', wNum: 330, w: 'W 330', protein: '13.5%', type: 'tipo1', favorite: false },
+      { id: 'f5', name: 'Manitoba Oro', wNum: 380, w: 'W 380', protein: '14.5%', type: 'raffinata', favorite: false }
     ];
+
+    // Preferiti delle farine predefinite (salvati separatamente)
+    const savedDefaultFavs = loadJSON('metropizza_default_favs', null);
+    if (Array.isArray(savedDefaultFavs)) {
+      defaultFlours.forEach(f => { f.favorite = savedDefaultFavs.includes(f.id); });
+    }
+
+    let customFlours = loadJSON('metropizza_flours', []);
+    if (!Array.isArray(customFlours)) customFlours = [];
+
+    let savedRecipes = loadJSON('metropizza_recipes', []);
+    if (!Array.isArray(savedRecipes)) savedRecipes = [];
+    savedRecipes = savedRecipes.filter(r => r && r.id && r.data);
+
+    // Blend attivo (array di righe: [{flourId, pct}])
+    let activeBlend = loadJSON('metropizza_blend', null);
+    if (!Array.isArray(activeBlend) || activeBlend.length === 0) {
+      activeBlend = [{ flourId: 'f2', pct: 100 }];
+    }
+    activeBlend = activeBlend
+      .filter(b => b && typeof b.flourId === 'string')
+      .map(b => ({ flourId: b.flourId, pct: Number(b.pct) || 0 }))
+      .slice(0, 2);
+    if (activeBlend.length === 0) activeBlend = [{ flourId: 'f2', pct: 100 }];
+    if (activeBlend.length === 1) activeBlend[0].pct = 100;
 
     const openAddFlourModal = document.getElementById('openAddFlourModal');
     const flourModal = document.getElementById('flourModal');
@@ -286,7 +330,7 @@ const FLOUR_FACTORS = {
     const editFlourId = document.getElementById('editFlourId');
     const modalFlourName = document.getElementById('modalFlourName');
     const modalFlourProtein = document.getElementById('modalFlourProtein');
-	const modalFlourType = document.getElementById('modalFlourType');
+    const modalFlourType = document.getElementById('modalFlourType');
     const blendRowsContainer = document.getElementById('blendRowsContainer');
     const addBlendRowBtn = document.getElementById('addBlendRowBtn');
     const catalogList = document.getElementById('catalogList');
@@ -313,9 +357,9 @@ const FLOUR_FACTORS = {
           <div>
             <div class="flex items-center gap-1.5">
               <button onclick="toggleFavorite('${f.id}')" class="text-amber-400 hover:scale-110 transition"><i class="fa-${f.favorite ? 'solid' : 'regular'} fa-star"></i></button>
-              <strong class="text-slate-200">${f.name}</strong>
+              <strong class="text-slate-200">${escapeHtml(f.name)}</strong>
             </div>
-            <span class="text-[10px] text-slate-400">${f.w} - Prot: ${f.protein} - ${f.type || 'raffinata'}</span>
+            <span class="text-[10px] text-slate-400">${escapeHtml(f.w)} - Prot: ${escapeHtml(f.protein)} - ${FLOUR_TYPE_LABELS[f.type] || FLOUR_TYPE_LABELS.raffinata}</span>
           </div>
           ${!defaultFlours.some(df => df.id === f.id) ? `
             <div class="flex gap-1.5">
@@ -329,10 +373,12 @@ const FLOUR_FACTORS = {
 
     window.toggleFavorite = (id) => {
       const def = defaultFlours.find(f => f.id === id);
-      if (def) { def.favorite = !def.favorite; }
-      else {
+      if (def) {
+        def.favorite = !def.favorite;
+        saveJSON('metropizza_default_favs', defaultFlours.filter(f => f.favorite).map(f => f.id));
+      } else {
         const cust = customFlours.find(f => f.id === id);
-        if (cust) { cust.favorite = !cust.favorite; localStorage.setItem('metropizza_flours', JSON.stringify(customFlours)); }
+        if (cust) { cust.favorite = !cust.favorite; saveJSON('metropizza_flours', customFlours); }
       }
       renderCatalog();
       renderBlendRows();
@@ -342,12 +388,12 @@ const FLOUR_FACTORS = {
     window.deleteCatalogFlour = (id) => {
       if (confirm("Eliminare questa farina?")) {
         customFlours = customFlours.filter(f => f.id !== id);
-        localStorage.setItem('metropizza_flours', JSON.stringify(customFlours));
+        saveJSON('metropizza_flours', customFlours);
         activeBlend = activeBlend.filter(b => b.flourId !== id);
         if (activeBlend.length === 0) activeBlend = [{ flourId: getAllFlours()[0].id, pct: 100 }];
+        if (activeBlend.length === 1) activeBlend[0].pct = 100;
         renderCatalog();
-        renderBlendRows();
-        calculate();
+        saveAndCalc();
       }
     };
 
@@ -358,7 +404,7 @@ const FLOUR_FACTORS = {
       editFlourId.value = found.id;
       modalFlourName.value = found.name;
       modalFlourProtein.value = parseFloat(found.protein);
-	  modalFlourType.value =  found.type || 'raffinata';
+      modalFlourType.value = found.type || 'raffinata';
       flourModal.classList.remove('hidden');
     };
 
@@ -367,29 +413,28 @@ const FLOUR_FACTORS = {
       editFlourId.value = "";
       modalFlourName.value = "";
       modalFlourProtein.value = "";
-	  modalFlourType.value = 'raffinata';
-	  
+      modalFlourType.value = 'raffinata';
       flourModal.classList.remove('hidden');
     };
     closeModalBtn.onclick = () => flourModal.classList.add('hidden');
 
     saveModalFlourBtn.onclick = () => {
-	  const flourType =  modalFlourType.value;
+      const flourType = modalFlourType.value;
       const name = modalFlourName.value.trim();
       const protVal = parseFloat(modalFlourProtein.value);
       const editingId = editFlourId.value;
 
-      if (!name || isNaN(protVal)) { alert("Inserisci nome e proteine valide!"); return; }
+      if (!name || isNaN(protVal) || protVal <= 0) { alert("Inserisci nome e proteine valide!"); return; }
       const calcW = getWFromProteins(protVal);
 
       if (editingId) {
         const item = customFlours.find(f => f.id === editingId);
         if (item) { item.name = name; item.wNum = calcW; item.w = 'W ' + calcW; item.protein = protVal + '%'; item.type = flourType; }
       } else {
-        customFlours.push({ id: 'custom_' + Date.now(), name, wNum: calcW, w: 'W ' + calcW, protein: protVal + '%', type:flourType, favorite: true });
+        customFlours.push({ id: 'custom_' + Date.now(), name, wNum: calcW, w: 'W ' + calcW, protein: protVal + '%', type: flourType, favorite: true });
       }
 
-      localStorage.setItem('metropizza_flours', JSON.stringify(customFlours));
+      saveJSON('metropizza_flours', customFlours);
       flourModal.classList.add('hidden');
       renderCatalog();
       renderBlendRows();
@@ -401,11 +446,11 @@ const FLOUR_FACTORS = {
       const all = getAllFlours();
       blendRowsContainer.innerHTML = activeBlend.map((row, idx) => `
         <div class="flex items-center gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60">
-          <select onchange="updateBlendFlour(${idx}, this.value)" class="flex-grow bg-slate-900 text-white text-xs border border-slate-700 rounded-lg p-1.5">
-            ${all.map(f => `<option value="${f.id}" ${f.id === row.flourId ? 'selected' : ''}>${f.favorite ? '⭐ ' : ''}${f.name} (${f.w})</option>`).join('')}
+          <select onchange="updateBlendFlour(${idx}, this.value)" class="flex-grow min-w-0 bg-slate-900 text-white text-xs border border-slate-700 rounded-lg p-1.5">
+            ${all.map(f => `<option value="${f.id}" ${f.id === row.flourId ? 'selected' : ''}>${f.favorite ? '⭐ ' : ''}${escapeHtml(f.name)} (${escapeHtml(f.w)})</option>`).join('')}
           </select>
           <div class="flex items-center gap-1">
-            <input type="number" value="${row.pct}" min="1" max="100" onchange="updateBlendPct(${idx}, this.value)" class="w-16 bg-slate-900 text-white text-xs border border-slate-700 rounded-lg p-1.5 text-center">
+            <input type="number" value="${row.pct}" min="0" max="100" ${activeBlend.length === 1 ? 'disabled' : ''} onchange="updateBlendPct(${idx}, this.value)" class="w-16 bg-slate-900 text-white text-xs border border-slate-700 rounded-lg p-1.5 text-center disabled:opacity-60">
             <span class="text-xs text-slate-400">%</span>
           </div>
           ${activeBlend.length > 1 ? `<button onclick="removeBlendRow(${idx})" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-xmark"></i></button>` : ''}
@@ -414,85 +459,78 @@ const FLOUR_FACTORS = {
     }
 
     window.updateBlendFlour = (idx, flourId) => { activeBlend[idx].flourId = flourId; saveAndCalc(); };
+
     window.updateBlendPct = (idx, pct) => {
-
-    pct = parseFloat(pct) || 0;
-
-    pct = Math.max(0, Math.min(100, pct));
-
-    activeBlend[idx].pct = pct;
-
-    if (activeBlend.length === 2) {
-
+      pct = parseFloat(pct) || 0;
+      pct = Math.max(0, Math.min(100, pct));
+      activeBlend[idx].pct = pct;
+      if (activeBlend.length === 2) {
         const otherIdx = idx === 0 ? 1 : 0;
-
         activeBlend[otherIdx].pct = 100 - pct;
-    }
+      }
+      saveAndCalc();
+    };
 
-    saveAndCalc();
-};
-    window.removeBlendRow = (idx) => { activeBlend.splice(idx, 1); saveAndCalc(); };
+    window.removeBlendRow = (idx) => {
+      activeBlend.splice(idx, 1);
+      // Con una sola farina rimasta il blend è per forza al 100%
+      if (activeBlend.length === 1) activeBlend[0].pct = 100;
+      saveAndCalc();
+    };
 
     addBlendRowBtn.onclick = () => {
-
-    if (activeBlend.length >= 2) {
-        alert(
-            "La modalità Blend automatico supporta massimo 2 farine."
-        );
+      if (activeBlend.length >= 2) {
+        alert("La modalità Blend automatico supporta massimo 2 farine.");
         return;
-    }
-
-    const all = getAllFlours();
-
-    activeBlend.push({
-        flourId: all[0].id,
-        pct: 50
-    });
-
-    activeBlend[0].pct = 50;
-
-    saveAndCalc();
-};
+      }
+      const all = getAllFlours();
+      const usedIds = activeBlend.map(b => b.flourId);
+      const next = all.find(f => !usedIds.includes(f.id)) || all[0];
+      activeBlend.push({ flourId: next.id, pct: 50 });
+      activeBlend[0].pct = 50;
+      saveAndCalc();
+    };
 
     function saveAndCalc() {
-      localStorage.setItem('metropizza_blend', JSON.stringify(activeBlend));
+      saveJSON('metropizza_blend', activeBlend);
       renderBlendRows();
       calculate();
     }
 
-    // Metodi
-    btnDirect.onclick = () => {
-      method = 'direct';
-      btnDirect.className = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-amber-500 text-slate-950 border-amber-500 shadow";
-      btnIndirect.className = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-slate-900 text-slate-300 border-slate-700";
-      indirectPanel.classList.add('hidden');
-      activeMethodBadge.textContent = 'DIRETTO';
+    // --- METODO ---
+    const ACTIVE_BTN = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-amber-500 text-slate-950 border-amber-500 shadow";
+    const INACTIVE_BTN = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-slate-900 text-slate-300 border-slate-700";
+
+    function setMethod(m) {
+      method = m;
+      btnDirect.className = m === 'direct' ? ACTIVE_BTN : INACTIVE_BTN;
+      btnIndirect.className = m === 'indirect' ? ACTIVE_BTN : INACTIVE_BTN;
+      indirectPanel.classList.toggle('hidden', m !== 'indirect');
       calculate();
-    };
+    }
 
-    btnIndirect.onclick = () => {
-      method = 'indirect';
-      btnIndirect.className = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-amber-500 text-slate-950 border-amber-500 shadow";
-      btnDirect.className = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-slate-900 text-slate-300 border-slate-700";
-      indirectPanel.classList.remove('hidden');
-      activeMethodBadge.textContent = 'INDIRETTO (' + prefermentType.value.toUpperCase() + ')';
-      calculate();
-    };
-	function getWholemealHydrationBoost(percent){
+    function updateMethodBadge() {
+      activeMethodBadge.textContent = method === 'direct'
+        ? 'DIRETTO'
+        : 'INDIRETTO (' + prefermentType.value.toUpperCase() + ')';
+    }
 
-	if(percent <= 10) return 0;
-	if(percent <= 20) return 2;
-	if(percent <= 30) return 4;
-	if(percent <= 40) return 6;
-	if(percent <= 50) return 8;
+    btnDirect.onclick = () => setMethod('direct');
+    btnIndirect.onclick = () => setMethod('indirect');
 
-	return 10;
-}
+    function getWholemealHydrationBoost(percent) {
+      if (percent <= 10) return 0;
+      if (percent <= 20) return 2;
+      if (percent <= 30) return 4;
+      if (percent <= 40) return 6;
+      if (percent <= 50) return 8;
+      return 10;
+    }
 
-function getTypeFactor(type){
+    function getTypeFactor(type) {
+      return FLOUR_FACTORS[type] || 1;
+    }
 
-  return FLOUR_FACTORS[type] || 1;
-}
     function calculateYeast(hR, tR, hF, tF, type) {
       const eq = (hR * Math.pow(tR / 20, 2.1)) + (hF * Math.pow(tF / 20, 2.1));
       if (eq <= 0) return { pct: 0, eqHours: 0 };
@@ -501,6 +539,33 @@ function getTypeFactor(type){
       if (type === 'dry') fPct /= 3;
       if (type === 'sourdough') fPct *= 15;
       return { pct: fPct, eqHours: eq };
+    }
+
+    // --- ALERT ---
+    const ALERT_STYLES = {
+      ok: ['bg-emerald-500/15 border-emerald-500/40 text-emerald-300', 'fa-circle-check text-emerald-400'],
+      warn: ['bg-amber-500/15 border-amber-500/40 text-amber-300', 'fa-triangle-exclamation text-amber-400'],
+      error: ['bg-red-500/15 border-red-500/40 text-red-300', 'fa-triangle-exclamation text-red-400']
+    };
+
+    function setAlert(kind, title, message) {
+      const [boxCls, iconCls] = ALERT_STYLES[kind];
+      alertBox.className = `p-4 rounded-xl border transition-all flex items-start gap-3 text-xs ${boxCls}`;
+      alertIcon.className = `fa-solid ${iconCls} text-lg mt-0.5`;
+      alertTitle.textContent = title;
+      alertMessage.textContent = message;
+    }
+
+    // Parametri non validi: niente ricetta a video e niente salvataggio
+    function showInvalid(title, message) {
+      setAlert('error', title, message);
+      recipeOutputContainer.innerHTML = `
+        <div class="text-center text-xs text-red-300 py-6 space-y-2">
+          <i class="fa-solid fa-ban text-2xl"></i>
+          <p>Correggi i parametri per vedere la ricetta.</p>
+        </div>`;
+      processTip.textContent = message;
+      currentCalculation = null;
     }
 
     function calculate() {
@@ -515,265 +580,215 @@ function getTypeFactor(type){
       const hF = parseFloat(hoursFridge.value) || 0;
       const tF = parseFloat(tempFridge.value) || 0;
       const yType = yeastType.value;
+      const isLM = yType === 'sourdough';
 
       hydrationVal.textContent = hyd + '%';
       saltVal.textContent = slt + '%';
       oilVal.textContent = ol + '%';
-
-      // Calcolo Blend Farine (Media Ponderata W e Proteine)
-      const allFlours = [...defaultFlours, ...customFlours];
-      let totalPct =
-activeBlend.reduce(
-  (sum, b) => sum + b.pct,
-  0
-);
-
-if(totalPct <= 0)
-  totalPct = 100;
-
-	if(Math.abs(totalPct - 100) > 0.01){
-
-	alertBox.className =
-		"p-4 rounded-xl border flex items-start gap-3 text-xs bg-red-500/15 border-red-500/40 text-red-300";
-
-	alertTitle.textContent =
-		"Blend non valido";
-
-	alertMessage.textContent =
-		`Le percentuali sommano ${totalPct}% e non 100%.`;
-
-  return;
-}
-
-      let weightedW = 0;
-      let blendDescription = [];
-
-      activeBlend.forEach(b => {
-        const flourObj = allFlours.find(f => f.id === b.flourId) || allFlours[0];
-        const fW = flourObj.wNum || parseInt(flourObj.w.replace(/\D/g,'')) || 260;
-        const weightRatio = b.pct / totalPct;
-        const correctedW =
-  fW *
-  getTypeFactor(
-      flourObj.type || 'raffinata'
-  );
-
-weightedW +=
-  correctedW *
-  weightRatio;
-        blendDescription.push(`${b.pct}% ${flourObj.name} (${flourObj.w})`);
-      });
-	  let wholemealPercent = 0;
-
-activeBlend.forEach(b => {
-
-  const flourObj =
-      allFlours.find(
-          f => f.id === b.flourId
-      );
-
-  if (
-      flourObj &&
-      flourObj.type === 'integrale'
-  ) {
-      wholemealPercent += b.pct;
-  }
-
-});
-
-const hydrationBoost =
-    getWholemealHydrationBoost(
-        wholemealPercent
-    );
-
-const suggestedHydration =
-    hyd + hydrationBoost;
-
-      const finalBlendW = Math.round(weightedW);
-
-      const yInfo = calculateYeast(hR, tR, hF, tF, yType);
-      const yPct = yInfo.pct;
+      updateMethodBadge();
 
       const totW = balls * bWeight;
       totalWeightDisplay.textContent = Math.round(totW) + ' g';
       totalHoursDisplay.textContent = (hR + hF) + ' h';
 
-      const mult = 1 + ((hyd + slt + ol + yPct) / 100);
+      // --- Blend farine ---
+      const allFlours = [...defaultFlours, ...customFlours];
+      const findFlour = (id) => allFlours.find(f => f.id === id) || allFlours[0];
+      const totalPct = activeBlend.reduce((sum, b) => sum + b.pct, 0);
+
+      if (Math.abs(totalPct - 100) > 0.01) {
+        flourWContainer.innerHTML = '';
+        showInvalid("Blend non valido", `Le percentuali delle farine sommano ${+totalPct.toFixed(1)}% e non 100%.`);
+        return;
+      }
+
+      let weightedW = 0;
+      let wholemealPercent = 0;
+      const blendDescription = [];
+
+      activeBlend.forEach(b => {
+        const flourObj = findFlour(b.flourId);
+        const fW = flourObj.wNum || parseInt(String(flourObj.w).replace(/\D/g, '')) || 260;
+        weightedW += fW * getTypeFactor(flourObj.type || 'raffinata') * (b.pct / 100);
+        if (flourObj.type === 'integrale') wholemealPercent += b.pct;
+        blendDescription.push(`${b.pct}% ${flourObj.name} (${flourObj.w})`);
+      });
+
+      const hydrationBoost = getWholemealHydrationBoost(wholemealPercent);
+      const suggestedHydration = hyd + hydrationBoost;
+      const finalBlendW = Math.round(weightedW);
+
+      // --- Lievito e ingredienti ---
+      const yInfo = calculateYeast(hR, tR, hF, tF, yType);
+      const yPct = yInfo.pct;
+
+      // Il lievito madre contiene già farina e acqua: non è massa aggiuntiva,
+      // la sua parte di farina/acqua viene scalata da quella da aggiungere.
+      const mult = 1 + ((hyd + slt + ol + (isLM ? 0 : yPct)) / 100);
       const flourTot = totW / mult;
       const waterTot = flourTot * (hyd / 100);
       const saltTot = flourTot * (slt / 100);
       const oilTot = flourTot * (ol / 100);
       const yeastTot = flourTot * (yPct / 100);
+      const lmFlour = isLM ? yeastTot / (1 + LM_HYDRATION) : 0;
+      const lmWater = isLM ? yeastTot - lmFlour : 0;
+      const yLabel = YEAST_LABELS[yType];
 
-      // W-Match Checker
+      // --- W-Match Checker ---
       let recWMin = 180, recWMax = 240;
       if (yInfo.eqHours > 6 && yInfo.eqHours <= 16) { recWMin = 220; recWMax = 280; }
       else if (yInfo.eqHours > 16 && yInfo.eqHours <= 32) { recWMin = 280; recWMax = 330; }
       else if (yInfo.eqHours > 32) { recWMin = 330; recWMax = 400; }
 
       flourWContainer.innerHTML = `
+        <div class="flex justify-between items-center bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/20">
+          <div>
+            <span class="text-slate-400 text-[10px]">Blend Totale:</span>
+            <span class="font-bold text-cyan-300">W ${finalBlendW}</span>
+          </div>
+          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">Ideale: W ${recWMin}-${recWMax}</span>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-xl border border-amber-500/20 text-xs">
+          🌾 Integrale: <strong>${wholemealPercent}%</strong>
+          ${hydrationBoost > 0 ? `<br>💧 Idratazione consigliata: <strong>${suggestedHydration}%</strong> (+${hydrationBoost}%)` : ''}
+        </div>
+      `;
 
-<div class="flex justify-between items-center bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/20">
-
-  <div>
-    <span class="text-slate-400 text-[10px]">
-      Blend Totale:
-    </span>
-
-    <span class="font-bold text-cyan-300">
-      W ${finalBlendW}
-    </span>
-  </div>
-
-  <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">
-    Ideale: W ${recWMin}-${recWMax}
-  </span>
-
-</div>
-
-<div class="bg-slate-900/80 p-2.5 rounded-xl border border-amber-500/20 text-xs">
-
-  🌾 Integrale:
-  <strong>${wholemealPercent}%</strong>
-
-  ${
-    hydrationBoost > 0
-    ? `<br>💧 Idratazione consigliata:
-       <strong>${suggestedHydration}%</strong>
-       (+${hydrationBoost}%)`
-    : ''
-  }
-
-</div>
-`;
-
+      const eqH = Math.round(yInfo.eqHours);
       if (finalBlendW < recWMin - 30) {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-red-500/15 border-red-500/40 text-red-300";
-        alertIcon.className = "fa-solid fa-triangle-exclamation text-red-400 text-lg mt-0.5";
-        alertTitle.textContent = "⚠️ Blend Troppo Debole!";
-        alertMessage.textContent = `La forza media del blend (W ${finalBlendW}) è troppo bassa per ${Math.round(yInfo.eqHours)}h equivalenti.`;
+        setAlert('error', "⚠️ Blend Troppo Debole!", `La forza media del blend (W ${finalBlendW}) è troppo bassa per ${eqH}h equivalenti di maturazione.`);
       } else if (finalBlendW > recWMax + 50) {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-amber-500/15 border-amber-500/40 text-amber-300";
-        alertIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5";
-        alertTitle.textContent = "⚠️ Blend Troppo Forte!";
-        alertMessage.textContent = `La forza media del blend (W ${finalBlendW}) è troppo alta per questo tempo breve.`;
+        setAlert('warn', "⚠️ Blend Troppo Forte!", `La forza media del blend (W ${finalBlendW}) è più alta del necessario per ${eqH}h equivalenti di maturazione.`);
       } else {
-        alertBox.className = "p-4 rounded-xl border flex items-start gap-3 text-xs bg-emerald-500/15 border-emerald-500/40 text-emerald-300";
-        alertIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg mt-0.5";
-        alertTitle.textContent = "✅ W Blend Bilanciato";
-        alertMessage.textContent = "La forza combinata delle farine rispecchia perfettamente la maturazione.";
+        setAlert('ok', "✅ W Blend Bilanciato", "La forza combinata delle farine rispecchia perfettamente la maturazione.");
       }
 
-      // Render scomposizione grammi per ciascuna farina del blend
-      let blendIngredientsHTML = activeBlend.map(b => {
-        const flourObj = allFlours.find(f => f.id === b.flourId) || allFlours[0];
-        const gramsForThisFlour = flourTot * ((b.pct / totalPct));
-        return `<li class="flex justify-between text-xs text-slate-300 pl-2"><span>- ${b.pct}% ${flourObj.name}:</span> <strong class="text-amber-300">${gramsForThisFlour.toFixed(1)} g</strong></li>`;
+      // Scomposizione in grammi di una quantità di farina secondo il blend
+      const blendBreakdown = (grams, colorCls) => activeBlend.map(b => {
+        const flourObj = findFlour(b.flourId);
+        return `<li class="flex justify-between text-xs text-slate-300 pl-2"><span>- ${b.pct}% ${escapeHtml(flourObj.name)}:</span> <strong class="${colorCls}">${(grams * b.pct / 100).toFixed(1)} g</strong></li>`;
       }).join('');
 
+      const lmNote = isLM
+        ? ` Farina e acqua indicate sono quelle da aggiungere: tengono già conto del lievito madre (idratato al ${Math.round(LM_HYDRATION * 100)}%).`
+        : '';
+
+      let prefInfo = null;
+
       if (method === 'direct') {
+        const flourToAdd = flourTot - lmFlour;
+        const waterToAdd = waterTot - lmWater;
+        if (waterToAdd < 0 || flourToAdd < 0) {
+          showInvalid("Troppo lievito madre", "Il lievito madre calcolato contiene più acqua di quella prevista dall'idratazione. Aumenta l'idratazione o i tempi di lievitazione.");
+          return;
+        }
+
         recipeOutputContainer.innerHTML = `
           <div>
             <h3 class="text-sm font-bold text-amber-400 mb-3 uppercase tracking-wider">Ricetta Diretto</h3>
             <ul class="space-y-2 text-sm">
               <li class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/30 space-y-1">
-                <div class="flex justify-between items-center font-medium text-slate-300"><span>🌾 Farina Totale</span><span class="text-amber-400 font-bold">${flourTot.toFixed(1)} g</span></div>
-                <ul class="space-y-0.5 pt-1">${blendIngredientsHTML}</ul>
+                <div class="flex justify-between items-center font-medium text-slate-300"><span>🌾 Farina${isLM ? ' da aggiungere' : ''}</span><span class="text-amber-400 font-bold">${flourToAdd.toFixed(1)} g</span></div>
+                <ul class="space-y-0.5 pt-1">${blendBreakdown(flourToAdd, 'text-amber-300')}</ul>
               </li>
-              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>💧 Acqua</span><span class="text-amber-400 font-bold">${waterTot.toFixed(1)} g</span></li>
+              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>💧 Acqua${isLM ? ' da aggiungere' : ''}</span><span class="text-amber-400 font-bold">${waterToAdd.toFixed(1)} g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧂 Sale</span><span class="text-amber-400 font-bold">${saltTot.toFixed(1)} g</span></li>
-              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧫 Lievito</span><span class="text-amber-400 font-bold">${yeastTot < 1 ? yeastTot.toFixed(2) : yeastTot.toFixed(1)} g</span></li>
+              <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧫 ${yLabel}</span><span class="text-amber-400 font-bold">${fmtGrams(yeastTot)} g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🫒 Olio</span><span class="text-amber-400 font-bold">${oilTot.toFixed(1)} g</span></li>
             </ul>
           </div>
         `;
-        processTip.textContent = hF > 0 ? `Punta 1-2h a TA (${tR}°C), frigo ${hF}h a ${tF}°C, staglio e appretto finale a TA.` : `Lievitazione interamente a TA (${tR}°C).`;
+
+        let tip;
+        if (hF > 0 && hR > 0) {
+          tip = `Puntata a TA (${tR}°C), poi ${hF}h in frigo a ${tF}°C; staglio e appretto a TA. In totale ${hR}h a temperatura ambiente.`;
+        } else if (hF > 0) {
+          tip = `Lievitazione interamente in frigo: ${hF}h a ${tF}°C.`;
+        } else {
+          tip = `Lievitazione interamente a TA: ${hR}h a ${tR}°C.`;
+        }
+        processTip.textContent = tip + lmNote;
       } else {
-	  const prefPct =
-    parseFloat(prefermentPct.value) || 50;
+        const pType = prefermentType.value;
+        const pName = pType === 'biga' ? 'Biga' : 'Poolish';
+        const pArt = pType === 'biga' ? 'la' : 'il';
+        const pHyd = PREFERMENT_HYDRATION[pType];
+        const prefPct = Math.max(10, Math.min(100, parseFloat(prefermentPct.value) || 50));
 
-const prefFlour =
-    flourTot * (prefPct / 100);
+        const prefFlour = flourTot * (prefPct / 100);
+        const prefWater = prefFlour * pHyd;
 
-const finalFlour =
-    flourTot - prefFlour;
+        // Lievito nel prefermento: dose di riferimento, mai oltre il totale calcolato.
+        // Il lievito madre va invece tutto nella Fase 2.
+        let prefYeast = 0;
+        if (!isLM) {
+          let refPct = PREFERMENT_FRESH_YEAST_PCT[pType];
+          if (yType === 'dry') refPct /= 3;
+          prefYeast = Math.min(yeastTot, prefFlour * refPct / 100);
+        }
+        const finalYeast = yeastTot - prefYeast;
 
-let prefWater = 0;
+        const finalFlour = flourTot - prefFlour - lmFlour;
+        const finalWater = waterTot - prefWater - lmWater;
 
-if (prefermentType.value === 'biga') {
+        if (finalWater < -0.05 || finalFlour < -0.05) {
+          const maxPct = Math.floor(((waterTot - lmWater) / (flourTot * pHyd)) * 100);
+          const hint = maxPct >= 10
+            ? `Con idratazione al ${hyd}% ${pArt} ${pName} può contenere al massimo il ${Math.min(100, maxPct)}% della farina.`
+            : `L'idratazione al ${hyd}% è troppo bassa per ${pType === 'biga' ? 'una' : 'un'} ${pName}.`;
+          showInvalid("Prefermento non compatibile", `${hint} Riduci la farina nel prefermento o aumenta l'idratazione.`);
+          return;
+        }
 
-    prefWater = prefFlour * 0.50;
+        prefInfo = { type: pType, pct: prefPct, flour: prefFlour, water: prefWater, yeast: prefYeast };
 
-} else {
+        const row = (label, value, cls) => `<div class="flex justify-between text-xs"><span>${label}</span><strong class="${cls}">${value} g</strong></div>`;
 
-    prefWater = prefFlour * 1.00;
-
-}
-
-const finalWater =
-    waterTot - prefWater;
         recipeOutputContainer.innerHTML = `
           <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2">
-            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Prefermento (Fase 1)</h3>
-            <div class="flex justify-between text-xs">
-  <span>🌾 Farina</span>
-  <strong class="text-amber-300">
-    ${prefFlour.toFixed(1)} g
-  </strong>
-</div>
-
-<div class="flex justify-between text-xs">
-  <span>💧 Acqua</span>
-  <strong class="text-amber-300">
-    ${prefWater.toFixed(1)} g
-  </strong>
-</div>
+            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">${pName} (Fase 1)</h3>
+            ${row('🌾 Farina', prefFlour.toFixed(1), 'text-amber-300')}
+            <ul class="space-y-0.5">${activeBlend.length > 1 ? blendBreakdown(prefFlour, 'text-amber-300') : ''}</ul>
+            ${row('💧 Acqua', prefWater.toFixed(1), 'text-amber-300')}
+            ${prefYeast > 0 ? row(`🧫 ${yLabel}`, fmtGrams(prefYeast), 'text-amber-300') : ''}
           </div>
           <div class="bg-slate-900/80 border border-slate-700/50 rounded-xl p-4 space-y-2">
-            <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Rinfresco (Fase 2)</h3>
-			<div class="flex justify-between text-xs">
-  <span>🌾 Farina:</span>
-  <strong class="text-emerald-400">
-      ${finalFlour.toFixed(1)}g
-  </strong>
-</div>
-            <div class="flex justify-between text-xs"><span>💧 Acqua:</span><strong class="text-emerald-400">${finalWater.toFixed(1)}g</strong></div>
-            <div class="flex justify-between text-xs"><span>🧂 Sale:</span><strong class="text-emerald-400">${saltTot.toFixed(1)}g</strong></div>
-            <div class="flex justify-between text-xs"><span>🧫 Lievito:</span><strong class="text-emerald-400">${yeastTot.toFixed(2)}g</strong></div>
+            <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Impasto finale (Fase 2)</h3>
+            ${row(`🌾 Farina${isLM ? ' da aggiungere' : ''}`, Math.max(0, finalFlour).toFixed(1), 'text-emerald-400')}
+            <ul class="space-y-0.5">${activeBlend.length > 1 && finalFlour > 0 ? blendBreakdown(finalFlour, 'text-emerald-400') : ''}</ul>
+            ${row(`💧 Acqua${isLM ? ' da aggiungere' : ''}`, Math.max(0, finalWater).toFixed(1), 'text-emerald-400')}
+            ${row('🧂 Sale', saltTot.toFixed(1), 'text-emerald-400')}
+            ${finalYeast > 0.005 ? row(`🧫 ${yLabel}`, fmtGrams(finalYeast), 'text-emerald-400') : ''}
+            ${row('🫒 Olio', oilTot.toFixed(1), 'text-emerald-400')}
           </div>
         `;
-        processTip.textContent = `Prepara il prefermento con le relative percentuali di blend.`;
+        processTip.textContent = `Prepara ${pArt} ${pName} (Fase 1) e ${pType === 'biga' ? 'lasciala' : 'lascialo'} maturare. Poi aggiungi gli ingredienti della Fase 2, con sale e olio per ultimi.` + lmNote;
       }
 
       currentCalculation = {
         method, numBalls: balls, ballWeight: bWeight, totalWeight: totW,
         hydration: hyd, salt: slt, oil: ol, blendDesc: blendDescription.join(', '), blendW: finalBlendW,
-        flourTot, waterTot, saltTot, yeastTot, oilTot, totalHours: hR + hF
+        flourTot, waterTot, saltTot, yeastTot, oilTot, totalHours: hR + hF,
+        yeastType: yType, preferment: prefInfo
       };
     }
 
-saveRecipeBtn.onclick = () => {
-    if (!currentCalculation) {
+    saveRecipeBtn.onclick = () => {
+      if (!currentCalculation) {
+        alert("Correggi i parametri prima di salvare la ricetta.");
         return;
-    }
-
-    savedRecipes.unshift({
+      }
+      savedRecipes.unshift({
         id: 'rec_' + Date.now(),
         date: new Date().toLocaleDateString('it-IT'),
         data: { ...currentCalculation },
         rating: 0,
         comment: ''
-    });
-
-    localStorage.setItem(
-        'metropizza_recipes',
-        JSON.stringify(savedRecipes)
-    );
-
-    renderHistory();
-
-    alert("RICETTA SALVATA");
-};
+      });
+      saveJSON('metropizza_recipes', savedRecipes);
+      renderHistory();
+      alert("RICETTA SALVATA");
+    };
 
     function renderHistory() {
       historyCountBadge.textContent = `${savedRecipes.length} Ricette`;
@@ -781,52 +796,62 @@ saveRecipeBtn.onclick = () => {
         historyGrid.innerHTML = `<div class="col-span-full py-6 text-center text-slate-500 text-xs">Nessuna ricetta salvata.</div>`;
         return;
       }
-      historyGrid.innerHTML = savedRecipes.map(rec => `
+      historyGrid.innerHTML = savedRecipes.map(rec => {
+        const d = rec.data;
+        const methodLabel = METHOD_LABELS[d.method] || d.method;
+        const prefLabel = d.preferment ? ` · ${d.preferment.type} ${d.preferment.pct}%` : '';
+        return `
         <div class="bg-slate-900/90 border border-slate-700/60 rounded-2xl p-4 space-y-3">
           <div class="flex justify-between items-start border-b border-slate-800 pb-2">
             <div>
-              <span class="text-[10px] font-mono text-amber-400 uppercase">${rec.data.method}</span>
-              <h4 class="text-xs font-bold text-slate-200">${rec.data.numBalls} panetti da ${rec.data.ballWeight}g (${rec.data.totalWeight}g)</h4>
-              <p class="text-[10px] text-slate-400">Blend: ${rec.data.blendDesc} (Media: W ${rec.data.blendW})</p>
+              <span class="text-[10px] font-mono text-amber-400 uppercase">${escapeHtml(methodLabel + prefLabel)}</span>
+              <h4 class="text-xs font-bold text-slate-200">${escapeHtml(d.numBalls)} panetti da ${escapeHtml(d.ballWeight)}g (${escapeHtml(d.totalWeight)}g)</h4>
+              <p class="text-[10px] text-slate-400">Blend: ${escapeHtml(d.blendDesc)} (Media: W ${escapeHtml(d.blendW)})</p>
             </div>
             <div class="text-right">
-              <span class="text-[10px] text-slate-500">${rec.date}</span>
-              <button onclick="deleteRecipe('${rec.id}')" class="text-red-400 hover:text-red-300 text-xs mt-1 block"><i class="fa-solid fa-trash"></i></button>
+              <span class="text-[10px] text-slate-500">${escapeHtml(rec.date)}</span>
+              <button onclick="deleteRecipe('${escapeHtml(rec.id)}')" class="text-red-400 hover:text-red-300 text-xs mt-1 block"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-1 text-[11px] bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <div>Idro: <strong>${rec.data.hydration}%</strong></div>
-            <div>Farina: <strong>${Math.round(rec.data.flourTot)}g</strong></div>
-            <div>Acqua: <strong>${Math.round(rec.data.waterTot)}g</strong></div>
-            <div>Lievito: <strong>${rec.data.yeastTot.toFixed(2)}g</strong></div>
+            <div>Idro: <strong>${escapeHtml(d.hydration)}%</strong></div>
+            <div>Farina: <strong>${Math.round(d.flourTot || 0)}g</strong></div>
+            <div>Acqua: <strong>${Math.round(d.waterTot || 0)}g</strong></div>
+            <div>${YEAST_LABELS[d.yeastType] || 'Lievito'}: <strong>${(d.yeastTot || 0).toFixed(2)}g</strong></div>
           </div>
           <div class="flex gap-1 text-amber-400 text-sm">
-            ${[1, 2, 3, 4, 5].map(s => `<i class="fa-${s <= rec.rating ? 'solid' : 'regular'} fa-star cursor-pointer" onclick="rateRecipe('${rec.id}', ${s})"></i>`).join('')}
+            ${[1, 2, 3, 4, 5].map(s => `<i class="fa-${s <= rec.rating ? 'solid' : 'regular'} fa-star cursor-pointer" onclick="rateRecipe('${escapeHtml(rec.id)}', ${s})"></i>`).join('')}
           </div>
-          <textarea onchange="updateComment('${rec.id}', this.value)" placeholder="Note di assaggio..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 resize-none h-12">${rec.comment || ''}</textarea>
+          <textarea onchange="updateComment('${escapeHtml(rec.id)}', this.value)" placeholder="Note di assaggio..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 resize-none h-12">${escapeHtml(rec.comment)}</textarea>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     window.rateRecipe = (id, r) => {
       const item = savedRecipes.find(x => x.id === id);
-      if (item) { item.rating = r; localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes)); renderHistory(); }
+      if (item) { item.rating = r; saveJSON('metropizza_recipes', savedRecipes); renderHistory(); }
     };
 
     window.updateComment = (id, c) => {
       const item = savedRecipes.find(x => x.id === id);
-      if (item) { item.comment = c; localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes)); }
+      if (item) { item.comment = c; saveJSON('metropizza_recipes', savedRecipes); }
     };
 
     window.deleteRecipe = (id) => {
       if (confirm("Eliminare questa ricetta dall'archivio?")) {
         savedRecipes = savedRecipes.filter(x => x.id !== id);
-        localStorage.setItem('metropizza_recipes', JSON.stringify(savedRecipes));
+        saveJSON('metropizza_recipes', savedRecipes);
         renderHistory();
       }
     };
 
-    document.querySelectorAll('input, select').forEach(el => el.oninput = calculate);
+    // Ricalcolo live per tutti i parametri (esclusi i campi del modale farine)
+    document.querySelectorAll('input, select').forEach(el => {
+      if (!flourModal.contains(el)) el.oninput = calculate;
+    });
+    prefermentType.onchange = calculate;
+
     renderCatalog();
     renderBlendRows();
     calculate();
