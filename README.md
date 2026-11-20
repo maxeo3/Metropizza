@@ -2,7 +2,7 @@
 
 Calcolatore professionale per impasti pizza con supporto Blend Farine, calcolo automatico del lievito, metodo diretto e indiretto, archivio ricette e gestione catalogo farine.
 
-![version](https://img.shields.io/badge/version-6.1-orange) ![PWA](https://img.shields.io/badge/PWA-enabled-green) ![offline](https://img.shields.io/badge/offline-ready-blue)
+![version](https://img.shields.io/badge/version-6.2-orange) ![PWA](https://img.shields.io/badge/PWA-enabled-green) ![offline](https://img.shields.io/badge/offline-ready-blue)
 
 ## 📋 Panoramica
 
@@ -10,10 +10,12 @@ MetroPizza è una web application progettata per pizzaioli, appassionati e profe
 
 - Impasto diretto
 - Impasto indiretto (Biga e Poolish)
-- Blend di farine (fino a 2 farine)
-- Calcolo automatico del lievito
+- Blend di farine (fino a 4 farine)
+- Calcolo automatico del lievito, con taratura personale
+- Calcolo della temperatura dell'acqua
 - Gestione farine personalizzate
-- Archivio ricette
+- Archivio ricette, ricaricabili nel calcolatore
+- Backup: esportazione e importazione dei dati
 - Progressive Web App (PWA)
 
 L'obiettivo è simulare il comportamento reale delle farine tenendo conto non soltanto del valore W, ma anche della tipologia della farina e della sua presenza all'interno del blend.
@@ -31,7 +33,7 @@ Calcolo classico dell'impasto. L'utente inserisce:
 - olio
 - tempi e temperature
 
-Il sistema genera automaticamente farina totale (con ripartizione per ogni farina del blend), acqua, sale, olio e lievito necessario.
+Il sistema genera automaticamente farina totale (con ripartizione per ogni farina del blend), acqua, sale, olio, lievito necessario e temperatura dell'acqua.
 
 ### Metodo Indiretto
 
@@ -45,13 +47,13 @@ Le dosi di lievito sono per il lievito fresco; con il lievito secco vengono divi
 L'utente sceglie il tipo di prefermento e la percentuale di farina da usare nel prefermento. Il sistema divide gli ingredienti tra:
 
 - **Fase 1 – Prefermento:** farina (ripartita per blend), acqua, lievito
-- **Fase 2 – Impasto finale:** farina (ripartita per blend), acqua, sale, lievito residuo, olio
+- **Fase 2 – Impasto finale:** farina (ripartita per blend), acqua, sale, lievito residuo, olio, temperatura dell'acqua
 
 **Controllo di compatibilità:** se il prefermento richiede più acqua di quella prevista dall'idratazione totale (ad esempio Poolish al 70% con idratazione al 65%), la ricetta non viene mostrata. Compare un avviso con la percentuale massima di farina utilizzabile nel prefermento.
 
 ## 🌾 Sistema Blend Farine
 
-Il motore consente di combinare fino a 2 farine. Esempio:
+Il motore consente di combinare fino a 4 farine. Esempio:
 
 | Farina         | Percentuale |
 |----------------|-------------|
@@ -67,8 +69,9 @@ Il sistema calcola automaticamente:
 
 Comportamento del blend:
 
-- con 2 farine, modificando la percentuale di una l'altra si adegua automaticamente per arrivare a 100%;
-- rimuovendo una farina (o eliminandola dal catalogo), quella rimasta torna automaticamente al 100%;
+- aggiungendo una farina, questa prende metà della percentuale della farina più presente (con una sola farina: 50% / 50%);
+- modificando una percentuale, l'ultima farina della lista si adegua per arrivare a 100% (se modifichi l'ultima, si adegua la penultima);
+- rimuovendo una farina, la sua percentuale passa all'ultima della lista; se ne resta una sola torna al 100%;
 - se le percentuali non sommano 100%, la ricetta non viene mostrata e il salvataggio è bloccato.
 
 ### Tipologie di farina supportate
@@ -94,6 +97,8 @@ Le farine integrali assorbono quantità maggiori di acqua. Il sistema suggerisce
 | 30-40%              | +6%                 |
 | 40-50%              | +8%                 |
 | oltre 50%           | +10%                |
+
+Quando è presente farina integrale compare l'opzione **"Usa l'idratazione consigliata nella ricetta"**: se attivata, la ricetta viene calcolata con l'idratazione aumentata, mentre lo slider resta sul valore base.
 
 Esempio:
 
@@ -130,7 +135,27 @@ Supporta:
 
 Il quantitativo viene adattato in funzione di ore e temperatura ambiente e di ore e temperatura frigorifero.
 
+**Taratura lievito (50%–200%):** la formula è un modello generale, ma ogni lievito, farina e frigorifero si comporta in modo diverso. Se i tuoi impasti lievitano troppo abbassa la taratura, se lievitano poco alzala. Il valore viene ricordato e moltiplica la dose calcolata.
+
 **Lievito madre:** il LM contiene già farina e acqua, quindi non è un ingrediente da sommare al peso. L'app considera un lievito madre solido idratato al 50% e mostra **farina e acqua da aggiungere**, già al netto di quelle contenute nel LM. Il peso totale dell'impasto resta quello impostato.
+
+## 🌡️ Temperatura dell'acqua
+
+Per ottenere l'impasto alla temperatura desiderata, l'app calcola la temperatura dell'acqua con il metodo dei fattori:
+
+```
+Diretto:   T acqua = 3 × T impasto − T farina − T ambiente − attrito
+Indiretto: T acqua = 4 × T impasto − T farina − T ambiente − T prefermento − attrito
+```
+
+| Metodo di impasto                    | Attrito indicativo |
+|--------------------------------------|--------------------|
+| A mano                               | +3°C               |
+| Forcella / braccia tuffanti          | +6°C               |
+| Planetaria                           | +9°C               |
+| Spirale                              | +12°C              |
+
+I valori di attrito dipendono da durata e velocità dell'impasto. Se la temperatura calcolata è sotto i 4°C l'app suggerisce acqua con ghiaccio, sopra i 35°C avvisa di non danneggiare il lievito.
 
 ## ⭐ Catalogo Farine
 
@@ -148,6 +173,18 @@ Tutte le ricette possono essere salvate localmente. Per ogni ricetta vengono mem
 - ingredienti e tipo di lievito
 - valutazione (stelle)
 - note personali
+- tutti i parametri del calcolatore e il blend
+
+Il pulsante **Carica** rimette nel calcolatore tutti i parametri e il blend di una ricetta salvata. Per le ricette salvate con versioni precedenti alla 6.2 vengono ripristinati solo i parametri principali (panetti, peso, idratazione, sale, olio, metodo).
+
+## 🔄 Backup dei dati
+
+Dall'archivio ricette:
+
+- **Esporta** scarica un file `metropizza-backup-AAAA-MM-GG.json` con ricette, farine personalizzate, preferiti, blend e parametri;
+- **Importa** carica un backup: ricette e farine vengono unite a quelle esistenti (quelle con lo stesso identificativo vengono sostituite), mentre blend, preferiti e parametri vengono ripristinati.
+
+Utile per non perdere i dati quando si svuota la cache del browser o si cambia dispositivo.
 
 ## 📱 Progressive Web App
 
@@ -171,6 +208,7 @@ I dati vengono salvati tramite LocalStorage. Nessun dato viene inviato a server 
 | `metropizza_default_favs`  | Preferiti tra le farine predefinite |
 | `metropizza_blend`         | Blend attivo                      |
 | `metropizza_recipes`       | Ricette salvate, valutazioni e note |
+| `metropizza_params`        | Ultimi parametri del calcolatore  |
 
 Se i dati salvati risultano danneggiati, l'app riparte con i valori predefiniti invece di bloccarsi.
 
@@ -207,6 +245,17 @@ Il valore corretto è più vicino al comportamento reale dell'impasto.
 - Service Worker
 - Progressive Web App
 
+## 📝 Novità versione 6.2
+
+- **Backup:** esportazione e importazione dei dati in un file JSON.
+- **Parametri ricordati:** panetti, idratazione, tempi, metodo e tutti gli altri campi restano impostati alla riapertura.
+- **Carica ricetta:** dall'archivio si possono ricaricare parametri e blend di una ricetta salvata.
+- **Idratazione consigliata:** con farina integrale si può applicare con un clic.
+- **Blend:** ora fino a 4 farine.
+- **Temperatura dell'acqua:** calcolata per metodo diretto e indiretto.
+- **Taratura lievito:** per adattare la dose ai propri risultati reali.
+- **Licenza:** aggiunto il file `LICENSE` (MIT).
+
 ## 📝 Novità versione 6.1
 
 - **Metodo indiretto:** niente più acqua negativa in Fase 2, con avviso e percentuale massima di prefermento.
@@ -227,14 +276,13 @@ Il valore corretto è più vicino al comportamento reale dell'impasto.
 - [ ] Database farine professionali
 - [ ] Supporto Licoli
 - [ ] Supporto Pasta Madre Solida configurabile
-- [ ] Calcolo temperatura finale impasto
 - [ ] Gestione impasti ad alta idratazione
 - [ ] Esportazione PDF
 - [ ] Condivisione ricette
 
 ## 📄 Licenza
 
-Progetto open source rilasciato sotto licenza MIT.
+Progetto open source rilasciato sotto licenza MIT: vedi il file [LICENSE](LICENSE).
 
 ## 👨‍🍳 Filosofia
 

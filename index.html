@@ -35,7 +35,7 @@
         </div>
       </div>
       <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-mono">
-        v6.1 Blend
+        v6.2 Blend
       </span>
     </div>
   </header>
@@ -68,6 +68,10 @@
               <div>
                 <label class="block text-xs font-medium text-slate-300 mb-1">Farina nel Prefermento (%)</label>
                 <input type="number" id="prefermentPct" value="50" min="10" max="100" step="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-slate-300 mb-1">Temp. Prefermento maturo (°C)</label>
+                <input type="number" id="prefermentTemp" value="18" min="0" max="35" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
               </div>
             </div>
           </div>
@@ -116,6 +120,11 @@
               <option value="sourdough">Lievito Madre (LM)</option>
             </select>
           </div>
+          <div>
+            <div class="flex justify-between text-xs font-medium mb-1"><span class="text-slate-400">Taratura Lievito</span><span class="text-amber-400 font-bold" id="yeastCalibVal">100%</span></div>
+            <input type="range" id="yeastCalib" min="50" max="200" step="5" value="100" class="w-full accent-amber-500 cursor-pointer">
+            <p class="text-[10px] text-slate-500 mt-1">Se i tuoi impasti lievitano troppo abbassa la taratura, se lievitano poco alzala. 100% = dose calcolata.</p>
+          </div>
           <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700/30">
             <div><label class="block text-xs font-medium text-slate-400 mb-1">Ore Temp. Ambiente</label><input type="number" id="hoursRoom" value="8" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
             <div><label class="block text-xs font-medium text-slate-400 mb-1">Temp. Ambiente (°C)</label><input type="number" id="tempRoom" value="20" min="10" max="38" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
@@ -133,7 +142,7 @@
             <button type="button" id="openAddFlourModal" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500/20"><i class="fa-solid fa-plus"></i> Nuova Farina</button>
           </div>
 
-          <p class="text-xs text-slate-400">Componi il tuo mix specificando le percentuali (la somma deve fare 100%).</p>
+          <p class="text-xs text-slate-400">Componi il tuo mix con fino a 4 farine specificando le percentuali (la somma deve fare 100%).</p>
 
           <!-- Contenitore delle righe di farine selezionate -->
           <div id="blendRowsContainer" class="space-y-3">
@@ -143,6 +152,25 @@
           <button type="button" id="addBlendRowBtn" class="w-full py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-amber-400 font-medium hover:bg-slate-800 transition">
             <i class="fa-solid fa-circle-plus"></i> Aggiungi un'altra farina al mix
           </button>
+        </div>
+
+        <!-- 5. Temperatura Impasto -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 backdrop-blur space-y-4">
+          <h2 class="text-base font-semibold mb-2 text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2"><i class="fa-solid fa-droplet text-amber-500"></i> 5. Temperatura Impasto</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-xs font-medium text-slate-400 mb-1">Temp. Farina (°C)</label><input type="number" id="flourTemp" value="20" min="0" max="40" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
+            <div><label class="block text-xs font-medium text-slate-400 mb-1">Impasto Finale Desiderato (°C)</label><input type="number" id="targetDoughTemp" value="24" min="15" max="32" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Metodo di impasto (riscaldamento per attrito)</label>
+            <select id="mixerType" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+              <option value="3">A mano (≈ +3°C)</option>
+              <option value="6">Impastatrice a forcella / braccia tuffanti (≈ +6°C)</option>
+              <option value="9">Planetaria (≈ +9°C)</option>
+              <option value="12">Spirale (≈ +12°C)</option>
+            </select>
+          </div>
+          <p class="text-[10px] text-slate-500">La temperatura dell'ambiente usata è quella della sezione 3. I valori di attrito sono indicativi: dipendono da durata e velocità dell'impasto.</p>
         </div>
 
       </section>
@@ -232,7 +260,12 @@
           <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-box-archive text-amber-500"></i> Archivio Ricette & Note</h2>
           <p class="text-xs text-slate-400">Storico impasti salvati con stelle e note</p>
         </div>
-        <span id="historyCountBadge" class="text-xs bg-slate-800 border border-slate-700 px-3 py-1 rounded-full font-mono text-amber-400">0 Ricette</span>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <span id="historyCountBadge" class="text-xs bg-slate-800 border border-slate-700 px-3 py-1 rounded-full font-mono text-amber-400">0 Ricette</span>
+          <button type="button" id="exportDataBtn" class="text-xs bg-slate-900 border border-slate-700 text-slate-200 px-3 py-1 rounded-lg hover:bg-slate-800"><i class="fa-solid fa-download text-amber-400"></i> Esporta</button>
+          <button type="button" id="importDataBtn" class="text-xs bg-slate-900 border border-slate-700 text-slate-200 px-3 py-1 rounded-lg hover:bg-slate-800"><i class="fa-solid fa-upload text-amber-400"></i> Importa</button>
+          <input type="file" id="importFileInput" accept="application/json,.json" class="hidden">
+        </div>
       </div>
       <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
@@ -263,6 +296,17 @@
     const PREFERMENT_FRESH_YEAST_PCT = { biga: 1.0, poolish: 0.2 };
     // Lievito madre solido: 50 g di acqua ogni 100 g di farina
     const LM_HYDRATION = 0.50;
+
+    const MAX_BLEND_FLOURS = 4;
+
+    // Parametri del calcolatore ricordati tra una sessione e l'altra
+    const PARAM_FIELDS = [
+      'numBalls', 'ballWeight', 'hydration', 'salt', 'oil',
+      'yeastType', 'yeastCalib', 'hoursRoom', 'tempRoom', 'hoursFridge', 'tempFridge',
+      'prefermentType', 'prefermentPct', 'prefermentTemp',
+      'flourTemp', 'targetDoughTemp', 'mixerType'
+    ];
+    let applyBoost = false; // usa l'idratazione consigliata per l'integrale
 
     const YEAST_LABELS = { fresh: 'Lievito fresco', dry: 'Lievito secco', sourdough: 'Lievito madre' };
     const METHOD_LABELS = { direct: 'Diretto', indirect: 'Indiretto' };
@@ -318,7 +362,7 @@
     activeBlend = activeBlend
       .filter(b => b && typeof b.flourId === 'string')
       .map(b => ({ flourId: b.flourId, pct: Number(b.pct) || 0 }))
-      .slice(0, 2);
+      .slice(0, MAX_BLEND_FLOURS);
     if (activeBlend.length === 0) activeBlend = [{ flourId: 'f2', pct: 100 }];
     if (activeBlend.length === 1) activeBlend[0].pct = 100;
 
@@ -460,34 +504,49 @@
 
     window.updateBlendFlour = (idx, flourId) => { activeBlend[idx].flourId = flourId; saveAndCalc(); };
 
+    // Riga che si adegua per mantenere la somma a 100%: l'ultima (o la penultima se si modifica l'ultima)
+    function blendAbsorberIdx(idx) {
+      const last = activeBlend.length - 1;
+      return idx === last ? last - 1 : last;
+    }
+
     window.updateBlendPct = (idx, pct) => {
       pct = parseFloat(pct) || 0;
       pct = Math.max(0, Math.min(100, pct));
       activeBlend[idx].pct = pct;
-      if (activeBlend.length === 2) {
-        const otherIdx = idx === 0 ? 1 : 0;
-        activeBlend[otherIdx].pct = 100 - pct;
+      if (activeBlend.length > 1) {
+        const absIdx = blendAbsorberIdx(idx);
+        const others = activeBlend.reduce((sum, b, i) => i === absIdx ? sum : sum + b.pct, 0);
+        activeBlend[absIdx].pct = Math.max(0, +(100 - others).toFixed(1));
       }
       saveAndCalc();
     };
 
     window.removeBlendRow = (idx) => {
-      activeBlend.splice(idx, 1);
-      // Con una sola farina rimasta il blend è per forza al 100%
-      if (activeBlend.length === 1) activeBlend[0].pct = 100;
+      const [removed] = activeBlend.splice(idx, 1);
+      if (activeBlend.length === 1) {
+        // Con una sola farina rimasta il blend è per forza al 100%
+        activeBlend[0].pct = 100;
+      } else {
+        const last = activeBlend.length - 1;
+        activeBlend[last].pct = +(activeBlend[last].pct + removed.pct).toFixed(1);
+      }
       saveAndCalc();
     };
 
     addBlendRowBtn.onclick = () => {
-      if (activeBlend.length >= 2) {
-        alert("La modalità Blend automatico supporta massimo 2 farine.");
+      if (activeBlend.length >= MAX_BLEND_FLOURS) {
+        alert(`Puoi usare al massimo ${MAX_BLEND_FLOURS} farine nel blend.`);
         return;
       }
       const all = getAllFlours();
       const usedIds = activeBlend.map(b => b.flourId);
       const next = all.find(f => !usedIds.includes(f.id)) || all[0];
-      activeBlend.push({ flourId: next.id, pct: 50 });
-      activeBlend[0].pct = 50;
+      // La nuova farina prende metà della percentuale della farina più presente
+      const largest = activeBlend.reduce((max, b) => b.pct > max.pct ? b : max, activeBlend[0]);
+      const half = Math.floor(largest.pct / 2);
+      largest.pct -= half;
+      activeBlend.push({ flourId: next.id, pct: half });
       saveAndCalc();
     };
 
@@ -496,6 +555,31 @@
       renderBlendRows();
       calculate();
     }
+
+    // --- PARAMETRI ---
+    function getParams() {
+      const p = { method, applyBoost };
+      PARAM_FIELDS.forEach(id => { p[id] = document.getElementById(id).value; });
+      return p;
+    }
+
+    function applyParams(p) {
+      if (!p || typeof p !== 'object') return;
+      PARAM_FIELDS.forEach(id => {
+        if (p[id] === undefined || p[id] === null) return;
+        const el = document.getElementById(id);
+        const value = String(p[id]);
+        if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === value)) return;
+        el.value = value;
+      });
+      if (p.method === 'direct' || p.method === 'indirect') method = p.method;
+      if (typeof p.applyBoost === 'boolean') applyBoost = p.applyBoost;
+    }
+
+    window.toggleBoost = (checked) => {
+      applyBoost = checked;
+      calculate();
+    };
 
     // --- METODO ---
     const ACTIVE_BTN = "py-2.5 px-4 rounded-xl font-medium text-sm border bg-amber-500 text-slate-950 border-amber-500 shadow";
@@ -571,7 +655,7 @@
     function calculate() {
       const balls = parseFloat(numBalls.value) || 0;
       const bWeight = parseFloat(ballWeight.value) || 0;
-      const hyd = parseFloat(hydration.value) || 0;
+      const baseHyd = parseFloat(hydration.value) || 0;
       const slt = parseFloat(salt.value) || 0;
       const ol = parseFloat(oil.value) || 0;
 
@@ -582,10 +666,16 @@
       const yType = yeastType.value;
       const isLM = yType === 'sourdough';
 
-      hydrationVal.textContent = hyd + '%';
+      hydrationVal.textContent = baseHyd + '%';
       saltVal.textContent = slt + '%';
       oilVal.textContent = ol + '%';
       updateMethodBadge();
+      saveJSON('metropizza_params', getParams());
+
+      const flourT = parseFloat(flourTemp.value) || 0;
+      const targetT = parseFloat(targetDoughTemp.value) || 0;
+      const friction = parseFloat(mixerType.value) || 0;
+      const prefT = parseFloat(prefermentTemp.value) || 0;
 
       const totW = balls * bWeight;
       totalWeightDisplay.textContent = Math.round(totW) + ' g';
@@ -615,12 +705,16 @@
       });
 
       const hydrationBoost = getWholemealHydrationBoost(wholemealPercent);
-      const suggestedHydration = hyd + hydrationBoost;
+      const suggestedHydration = baseHyd + hydrationBoost;
+      // Idratazione effettivamente usata nella ricetta
+      const hyd = applyBoost && hydrationBoost > 0 ? suggestedHydration : baseHyd;
       const finalBlendW = Math.round(weightedW);
 
       // --- Lievito e ingredienti ---
       const yInfo = calculateYeast(hR, tR, hF, tF, yType);
-      const yPct = yInfo.pct;
+      const calibPct = parseFloat(yeastCalib.value) || 100;
+      yeastCalibVal.textContent = calibPct + '%';
+      const yPct = yInfo.pct * calibPct / 100;
 
       // Il lievito madre contiene già farina e acqua: non è massa aggiuntiva,
       // la sua parte di farina/acqua viene scalata da quella da aggiungere.
@@ -650,7 +744,12 @@
         </div>
         <div class="bg-slate-900/80 p-2.5 rounded-xl border border-amber-500/20 text-xs">
           🌾 Integrale: <strong>${wholemealPercent}%</strong>
-          ${hydrationBoost > 0 ? `<br>💧 Idratazione consigliata: <strong>${suggestedHydration}%</strong> (+${hydrationBoost}%)` : ''}
+          ${hydrationBoost > 0 ? `<br>💧 Idratazione consigliata: <strong>${suggestedHydration}%</strong> (+${hydrationBoost}%)
+            <label class="flex items-center gap-2 mt-2 cursor-pointer text-slate-300">
+              <input type="checkbox" ${applyBoost ? 'checked' : ''} onchange="toggleBoost(this.checked)" class="accent-amber-500">
+              Usa l'idratazione consigliata nella ricetta
+            </label>
+            ${applyBoost ? `<span class="text-emerald-300">Idratazione usata: <strong>${hyd}%</strong></span>` : ''}` : ''}
         </div>
       `;
 
@@ -673,7 +772,18 @@
         ? ` Farina e acqua indicate sono quelle da aggiungere: tengono già conto del lievito madre (idratato al ${Math.round(LM_HYDRATION * 100)}%).`
         : '';
 
+      // Temperatura dell'acqua (metodo dei fattori): la somma delle temperature
+      // degli ingredienti + attrito deve dare N × temperatura desiderata
+      const waterTempRow = (waterT, cls) => {
+        let note = '';
+        if (waterT < 4) note = 'Molto fredda: usa acqua di frigo con ghiaccio, oppure abbassa la temperatura della farina.';
+        else if (waterT > 35) note = 'Molto calda: non superare i 35-40°C per non danneggiare il lievito.';
+        return `<div class="flex justify-between text-xs"><span>🌡️ Temperatura acqua</span><strong class="${cls}">${waterT.toFixed(1)} °C</strong></div>`
+          + (note ? `<p class="text-[10px] text-amber-300/90">${note}</p>` : '');
+      };
+
       let prefInfo = null;
+      let waterTemp;
 
       if (method === 'direct') {
         const flourToAdd = flourTot - lmFlour;
@@ -682,6 +792,8 @@
           showInvalid("Troppo lievito madre", "Il lievito madre calcolato contiene più acqua di quella prevista dall'idratazione. Aumenta l'idratazione o i tempi di lievitazione.");
           return;
         }
+
+        waterTemp = 3 * targetT - flourT - tR - friction;
 
         recipeOutputContainer.innerHTML = `
           <div>
@@ -695,6 +807,7 @@
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧂 Sale</span><span class="text-amber-400 font-bold">${saltTot.toFixed(1)} g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🧫 ${yLabel}</span><span class="text-amber-400 font-bold">${fmtGrams(yeastTot)} g</span></li>
               <li class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-700/30"><span>🫒 Olio</span><span class="text-amber-400 font-bold">${oilTot.toFixed(1)} g</span></li>
+              <li class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/30 space-y-1">${waterTempRow(waterTemp, 'text-amber-400')}</li>
             </ul>
           </div>
         `;
@@ -741,6 +854,7 @@
         }
 
         prefInfo = { type: pType, pct: prefPct, flour: prefFlour, water: prefWater, yeast: prefYeast };
+        waterTemp = 4 * targetT - flourT - tR - prefT - friction;
 
         const row = (label, value, cls) => `<div class="flex justify-between text-xs"><span>${label}</span><strong class="${cls}">${value} g</strong></div>`;
 
@@ -760,6 +874,7 @@
             ${row('🧂 Sale', saltTot.toFixed(1), 'text-emerald-400')}
             ${finalYeast > 0.005 ? row(`🧫 ${yLabel}`, fmtGrams(finalYeast), 'text-emerald-400') : ''}
             ${row('🫒 Olio', oilTot.toFixed(1), 'text-emerald-400')}
+            ${waterTempRow(waterTemp, 'text-emerald-400')}
           </div>
         `;
         processTip.textContent = `Prepara ${pArt} ${pName} (Fase 1) e ${pType === 'biga' ? 'lasciala' : 'lascialo'} maturare. Poi aggiungi gli ingredienti della Fase 2, con sale e olio per ultimi.` + lmNote;
@@ -769,7 +884,9 @@
         method, numBalls: balls, ballWeight: bWeight, totalWeight: totW,
         hydration: hyd, salt: slt, oil: ol, blendDesc: blendDescription.join(', '), blendW: finalBlendW,
         flourTot, waterTot, saltTot, yeastTot, oilTot, totalHours: hR + hF,
-        yeastType: yType, preferment: prefInfo
+        yeastType: yType, preferment: prefInfo, waterTemp,
+        params: getParams(),
+        blend: activeBlend.map(b => ({ ...b }))
       };
     }
 
@@ -808,9 +925,12 @@
               <h4 class="text-xs font-bold text-slate-200">${escapeHtml(d.numBalls)} panetti da ${escapeHtml(d.ballWeight)}g (${escapeHtml(d.totalWeight)}g)</h4>
               <p class="text-[10px] text-slate-400">Blend: ${escapeHtml(d.blendDesc)} (Media: W ${escapeHtml(d.blendW)})</p>
             </div>
-            <div class="text-right">
+            <div class="text-right shrink-0">
               <span class="text-[10px] text-slate-500">${escapeHtml(rec.date)}</span>
-              <button onclick="deleteRecipe('${escapeHtml(rec.id)}')" class="text-red-400 hover:text-red-300 text-xs mt-1 block"><i class="fa-solid fa-trash"></i></button>
+              <div class="flex justify-end gap-2 mt-1">
+                <button onclick="loadRecipe('${escapeHtml(rec.id)}')" title="Carica nel calcolatore" class="text-emerald-400 hover:text-emerald-300 text-xs"><i class="fa-solid fa-arrow-rotate-left"></i> Carica</button>
+                <button onclick="deleteRecipe('${escapeHtml(rec.id)}')" title="Elimina" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+              </div>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-1 text-[11px] bg-slate-950 p-2 rounded-xl border border-slate-800">
@@ -838,6 +958,34 @@
       if (item) { item.comment = c; saveJSON('metropizza_recipes', savedRecipes); }
     };
 
+    window.loadRecipe = (id) => {
+      const rec = savedRecipes.find(x => x.id === id);
+      if (!rec) return;
+      const d = rec.data;
+      // Le ricette salvate prima della v6.2 non hanno tutti i parametri
+      applyParams(d.params || {
+        numBalls: d.numBalls, ballWeight: d.ballWeight, hydration: d.hydration,
+        salt: d.salt, oil: d.oil, method: d.method, yeastType: d.yeastType
+      });
+
+      let blendRestored = false;
+      if (Array.isArray(d.blend) && d.blend.length > 0) {
+        const allIds = [...defaultFlours, ...customFlours].map(f => f.id);
+        if (d.blend.every(b => allIds.includes(b.flourId))) {
+          activeBlend = d.blend.slice(0, MAX_BLEND_FLOURS).map(b => ({ flourId: b.flourId, pct: Number(b.pct) || 0 }));
+          saveJSON('metropizza_blend', activeBlend);
+          blendRestored = true;
+        }
+      }
+
+      renderBlendRows();
+      setMethod(method);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!blendRestored) {
+        alert("Parametri caricati. Il blend di farine non è stato ripristinato (ricetta salvata con una versione precedente o farina non più in catalogo): controllalo nella sezione 4.");
+      }
+    };
+
     window.deleteRecipe = (id) => {
       if (confirm("Eliminare questa ricetta dall'archivio?")) {
         savedRecipes = savedRecipes.filter(x => x.id !== id);
@@ -846,15 +994,91 @@
       }
     };
 
-    // Ricalcolo live per tutti i parametri (esclusi i campi del modale farine)
+    // --- ESPORTA / IMPORTA ---
+    exportDataBtn.onclick = () => {
+      const data = {
+        app: 'MetroPizza',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        customFlours,
+        defaultFavs: defaultFlours.filter(f => f.favorite).map(f => f.id),
+        blend: activeBlend,
+        params: getParams(),
+        recipes: savedRecipes
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `metropizza-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    importDataBtn.onclick = () => importFileInput.click();
+
+    importFileInput.onchange = () => {
+      const file = importFileInput.files[0];
+      importFileInput.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try { data = JSON.parse(reader.result); } catch (e) { data = null; }
+        if (!data || data.app !== 'MetroPizza') {
+          alert("File non valido: seleziona un backup esportato da MetroPizza.");
+          return;
+        }
+        const flours = (Array.isArray(data.customFlours) ? data.customFlours : [])
+          .filter(f => f && typeof f.id === 'string' && f.name && Number(f.wNum) > 0);
+        const recipes = (Array.isArray(data.recipes) ? data.recipes : [])
+          .filter(r => r && typeof r.id === 'string' && r.data && typeof r.data === 'object');
+
+        if (!confirm(`Importare ${recipes.length} ricette e ${flours.length} farine personalizzate?\nGli elementi già presenti con lo stesso identificativo verranno sostituiti, gli altri restano.`)) return;
+
+        const mergeById = (current, incoming) => {
+          const map = new Map(current.map(x => [x.id, x]));
+          incoming.forEach(x => map.set(x.id, x));
+          return [...map.values()];
+        };
+        customFlours = mergeById(customFlours, flours);
+        savedRecipes = mergeById(savedRecipes, recipes)
+          .sort((a, b) => (parseInt(String(b.id).replace(/\D/g, '')) || 0) - (parseInt(String(a.id).replace(/\D/g, '')) || 0));
+
+        if (Array.isArray(data.defaultFavs)) {
+          defaultFlours.forEach(f => { f.favorite = data.defaultFavs.includes(f.id); });
+          saveJSON('metropizza_default_favs', defaultFlours.filter(f => f.favorite).map(f => f.id));
+        }
+        const allIds = [...defaultFlours, ...customFlours].map(f => f.id);
+        if (Array.isArray(data.blend) && data.blend.length > 0 && data.blend.every(b => b && allIds.includes(b.flourId))) {
+          activeBlend = data.blend.slice(0, MAX_BLEND_FLOURS).map(b => ({ flourId: b.flourId, pct: Number(b.pct) || 0 }));
+        }
+        applyParams(data.params);
+
+        saveJSON('metropizza_flours', customFlours);
+        saveJSON('metropizza_recipes', savedRecipes);
+        saveJSON('metropizza_blend', activeBlend);
+        renderCatalog();
+        renderBlendRows();
+        renderHistory();
+        setMethod(method);
+        alert("Importazione completata.");
+      };
+      reader.readAsText(file);
+    };
+
+    // Ricalcolo live per tutti i parametri (esclusi il modale farine e il file di import)
     document.querySelectorAll('input, select').forEach(el => {
-      if (!flourModal.contains(el)) el.oninput = calculate;
+      if (!flourModal.contains(el) && el !== importFileInput) el.oninput = calculate;
     });
     prefermentType.onchange = calculate;
 
+    applyParams(loadJSON('metropizza_params', null));
     renderCatalog();
     renderBlendRows();
-    calculate();
+    setMethod(method);
     renderHistory();
   </script>
 </body>

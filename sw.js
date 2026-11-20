@@ -1,5 +1,5 @@
 // Cambia la versione ogni volta che vuoi forzare la pulizia della cache.
-const CACHE = 'metropizza-v2';
+const CACHE = 'metropizza-v3';
 
 const APP_FILES = [
   './',
